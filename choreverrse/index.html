@@ -1,0 +1,1653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ChoreVerse — MeriLaundry prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --mist:#EAF3F2; --ink:#0F2A2B; --ink-soft:#5B7374; --ink-faint:#8FA3A3;
+  --line:#E2ECEB; --card:#FFFFFF;
+  --teal:#0E9BA0; --teal-deep:#0B7A7E; --teal-tint:#E1F3F3;
+  --marigold:#F6A623; --marigold-deep:#D9870A; --marigold-tint:#FDF1DC;
+  --indigo:#4F46E5; --indigo-deep:#3A32C0; --indigo-tint:#ECEBFC;
+  --green:#16A06B; --green-tint:#DEF3EA;
+  --amber:#E8920C; --red:#E0573E; --red-tint:#FBE7E2;
+  --shadow:0 10px 30px rgba(15,42,43,.10); --shadow-sm:0 2px 8px rgba(15,42,43,.07);
+  --r:18px; --r-sm:12px;
+  --disp:'Plus Jakarta Sans',system-ui,sans-serif;
+  --body:'Inter',system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{font-family:var(--body);color:var(--ink);background:#0c1f20;-webkit-font-smoothing:antialiased;line-height:1.45}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit;font-size:16px}
+img{max-width:100%;display:block}
+svg{width:18px;height:18px;flex-shrink:0;vertical-align:middle}
+.hidden{display:none!important}
+
+/* ===== Perspective bar ===== */
+#persona-bar{position:sticky;top:0;z-index:50;background:linear-gradient(100deg,#1c1840,#2a2470);
+  color:#fff;display:flex;align-items:center;gap:14px;padding:9px 16px;flex-wrap:wrap}
+#persona-bar .cv-logo{display:flex;align-items:center;gap:9px;font-family:var(--disp);font-weight:800;font-size:15px;letter-spacing:.2px}
+#persona-bar .cv-logo .dot{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#7d76ff,#4F46E5);display:grid;place-items:center}
+#persona-bar .lbl{font-size:11px;color:#b9b4f0;text-transform:uppercase;letter-spacing:.12em;margin-left:6px}
+.pchips{display:flex;gap:7px;flex-wrap:wrap;flex:1}
+.pchip{display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.09);
+  font-size:13px;font-weight:600;color:#d9d6ff;transition:.15s;white-space:nowrap}
+.pchip:hover{background:rgba(255,255,255,.16)}
+.pchip.on{background:#fff;color:#2a2470}
+.pchip svg{width:16px;height:16px}
+#persona-bar .reset{font-size:12px;color:#b9b4f0;font-weight:600;padding:6px 10px;border-radius:8px}
+#persona-bar .reset:hover{background:rgba(255,255,255,.12)}
+
+/* ===== Stage ===== */
+#stage{min-height:calc(100vh - 50px);display:flex;align-items:flex-start;justify-content:center;padding:26px 16px 60px}
+
+/* ===== Phone frame ===== */
+.phone{width:390px;max-width:100%;background:#0c1f20;border-radius:46px;padding:11px;box-shadow:0 30px 70px rgba(0,0,0,.5);position:relative}
+.phone .notch{position:absolute;top:18px;left:50%;transform:translateX(-50%);width:120px;height:26px;background:#0c1f20;border-radius:0 0 18px 18px;z-index:30}
+.screen{background:var(--mist);border-radius:36px;overflow:hidden;height:780px;max-height:calc(100vh - 110px);display:flex;flex-direction:column;position:relative}
+.statusbar{height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;font-size:12px;font-weight:700;color:var(--ink);flex-shrink:0;background:transparent}
+.statusbar .right{display:flex;gap:5px;align-items:center}
+.statusbar .right svg{width:15px;height:15px}
+.viewport{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.viewport::-webkit-scrollbar{width:0}
+
+/* ===== Desktop frame ===== */
+.laptop{width:min(1080px,100%);background:var(--card);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;display:flex;min-height:640px}
+.lt-side{width:230px;background:#1c1840;color:#cfcbf5;flex-shrink:0;padding:22px 14px;display:flex;flex-direction:column;gap:4px}
+.lt-side .brand{display:flex;align-items:center;gap:10px;padding:4px 8px 20px;font-family:var(--disp);font-weight:800;color:#fff;font-size:17px}
+.lt-side .brand .dot{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#7d76ff,#4F46E5);display:grid;place-items:center}
+.lt-nav{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:11px;font-size:14px;font-weight:600;color:#b9b4f0;transition:.15s}
+.lt-nav svg{width:18px;height:18px}
+.lt-nav:hover{background:rgba(255,255,255,.07);color:#fff}
+.lt-nav.on{background:var(--indigo);color:#fff}
+.lt-side .who{margin-top:auto;padding:13px;border-radius:12px;background:rgba(255,255,255,.06);font-size:12.5px;color:#cfcbf5}
+.lt-side .who b{color:#fff;display:block;font-size:13px}
+.lt-main{flex:1;background:#F6F8FB;overflow-y:auto;max-height:calc(100vh - 110px)}
+.lt-top{display:flex;align-items:center;justify-content:space-between;padding:20px 30px;border-bottom:1px solid #ECEFF4;background:#fff;position:sticky;top:0;z-index:5}
+.lt-top h1{font-family:var(--disp);font-size:21px;margin:0;font-weight:800}
+.lt-top .sub{font-size:13px;color:var(--ink-soft);margin-top:2px}
+.lt-body{padding:26px 30px}
+
+/* generic */
+.row{display:flex;gap:12px}.between{justify-content:space-between}.center{align-items:center}.wrap{flex-wrap:wrap}
+.muted{color:var(--ink-soft)}.faint{color:var(--ink-faint)}
+.grow{flex:1}.tac{text-align:center}.tar{text-align:right}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mt24{margin-top:24px}
+.b{font-weight:700}.sb{font-weight:600}
+.sec-pad{padding:18px 18px 0}
+
+/* ===== App (mobile) shell ===== */
+.appbar{background:var(--teal);color:#fff;padding:16px 18px 30px;border-radius:0 0 26px 26px;flex-shrink:0;position:relative;overflow:hidden}
+.appbar.indigo{background:var(--indigo)}
+.appbar::after{content:"";position:absolute;right:-40px;top:-50px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.08)}
+.appbar .ml-logo{display:flex;align-items:center;gap:9px;font-family:var(--disp);font-weight:800;font-size:18px;position:relative;z-index:1}
+.appbar .ml-logo .bub{width:30px;height:30px;border-radius:10px;background:rgba(255,255,255,.22);display:grid;place-items:center}
+.appbar .hi{font-size:13px;opacity:.9;margin-top:2px}
+.ml-mark .bub{background:#fff;color:var(--teal)}
+
+.bnav{display:flex;background:#fff;border-top:1px solid var(--line);flex-shrink:0;padding:6px 4px 8px}
+.bnav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;color:var(--ink-faint);font-size:11px;font-weight:600;border-radius:12px}
+.bnav button svg{width:23px;height:23px}
+.bnav button.on{color:var(--teal)}
+.bnav button.on svg{stroke-width:2.4}
+
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow-sm);padding:16px;margin:14px 18px}
+.card.flush{margin:0}
+.tile{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow-sm);padding:15px}
+h2.scr{font-family:var(--disp);font-size:19px;margin:0}
+.kicker{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal)}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:15px 20px;border-radius:14px;
+  background:var(--teal);color:#fff;font-weight:700;font-size:15.5px;width:100%;transition:.12s;box-shadow:0 6px 16px rgba(14,155,160,.28)}
+.btn:active{transform:translateY(1px)}
+.btn svg{width:20px;height:20px}
+.btn.gold{background:var(--marigold);box-shadow:0 6px 16px rgba(246,166,35,.3);color:#3a2600}
+.btn.green{background:var(--green);box-shadow:0 6px 16px rgba(22,160,107,.28)}
+.btn.ind{background:var(--indigo);box-shadow:0 6px 16px rgba(79,70,229,.28)}
+.btn.ghost{background:#fff;color:var(--teal);border:1.5px solid var(--teal-tint);box-shadow:none}
+.btn.dark{background:var(--ink)}
+.btn.sm{padding:10px 14px;font-size:13.5px;width:auto;border-radius:11px;box-shadow:none}
+.btn.lg{padding:17px 22px;font-size:16.5px}
+.btn[disabled]{opacity:.45;box-shadow:none;pointer-events:none}
+
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:12px;font-weight:700}
+.pill svg{width:13px;height:13px}
+.pill.teal{background:var(--teal-tint);color:var(--teal-deep)}
+.pill.gold{background:var(--marigold-tint);color:var(--marigold-deep)}
+.pill.green{background:var(--green-tint);color:var(--green)}
+.pill.red{background:var(--red-tint);color:var(--red)}
+.pill.ind{background:var(--indigo-tint);color:var(--indigo-deep)}
+.pill.grey{background:#EEF2F2;color:var(--ink-soft)}
+
+.field{margin-top:13px}
+.field label{display:block;font-size:12.5px;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;outline:none;transition:.15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--teal)}
+.divider{height:1px;background:var(--line);margin:14px 0}
+
+.avatar{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-weight:800;color:#fff;font-family:var(--disp);flex-shrink:0}
+
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;
+  padding:13px 20px;border-radius:14px;font-weight:600;font-size:14px;box-shadow:var(--shadow);z-index:200;opacity:0;
+  transition:.28s;display:flex;align-items:center;gap:10px;max-width:330px;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast svg{width:18px;height:18px;color:#5fe0a8}
+
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(246,166,35,.5)}70%{box-shadow:0 0 0 12px rgba(246,166,35,0)}100%{box-shadow:0 0 0 0 rgba(246,166,35,0)}}
+.pulse{animation:pulse 1.8s infinite}
+@keyframes pop{0%{transform:scale(.96);opacity:0}100%{transform:scale(1);opacity:1}}
+.viewport>*{animation:pop .22s ease}
+
+/* timeline */
+.tl{list-style:none;margin:0;padding:0}
+.tl li{display:flex;gap:13px;position:relative;padding-bottom:18px}
+.tl li:last-child{padding-bottom:0}
+.tl li .nod{width:26px;height:26px;border-radius:50%;background:#fff;border:2px solid var(--line);display:grid;place-items:center;flex-shrink:0;z-index:1}
+.tl li .nod svg{width:13px;height:13px;color:var(--ink-faint)}
+.tl li.done .nod{background:var(--green);border-color:var(--green)}
+.tl li.done .nod svg{color:#fff}
+.tl li.now .nod{background:var(--teal);border-color:var(--teal)}
+.tl li.now .nod svg{color:#fff}
+.tl li:not(:last-child):before{content:"";position:absolute;left:12px;top:26px;bottom:0;width:2px;background:var(--line)}
+.tl li.done:before{background:var(--green)}
+.tl .t-main{font-weight:700;font-size:14px}
+.tl .t-sub{font-size:12px;color:var(--ink-soft)}
+.tl li.pending .t-main{color:var(--ink-faint);font-weight:600}
+
+/* desktop cards/tables */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.kpi{background:#fff;border:1px solid #ECEFF4;border-radius:14px;padding:18px}
+.kpi .lab{font-size:12.5px;color:var(--ink-soft);font-weight:600;display:flex;align-items:center;gap:7px}
+.kpi .lab svg{width:15px;height:15px;color:var(--indigo)}
+.kpi .num{font-family:var(--disp);font-size:27px;font-weight:800;margin-top:8px}
+.kpi .num small{font-size:14px;font-weight:700;color:var(--ink-soft)}
+.dcard{background:#fff;border:1px solid #ECEFF4;border-radius:14px;padding:20px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);padding:0 12px 10px;font-weight:700}
+td{padding:12px;border-top:1px solid #F0F2F6;font-size:14px;vertical-align:middle}
+tr:hover td{background:#FAFBFD}
+.toggle{width:44px;height:25px;border-radius:999px;background:#D4DAE2;position:relative;transition:.2s;flex-shrink:0}
+.toggle.on{background:var(--green)}
+.toggle::after{content:"";position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:#fff;transition:.2s}
+.toggle.on::after{left:22px}
+
+/* switcher landing */
+.land{width:min(960px,100%);color:#fff;padding:10px 6px}
+.land .hero{text-align:center;padding:24px 10px 30px}
+.land .hero .eyebrow{font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#9b94f0}
+.land .hero h1{font-family:var(--disp);font-size:clamp(30px,6vw,46px);font-weight:800;margin:12px 0 0;line-height:1.05}
+.land .hero h1 .tl-grad{background:linear-gradient(100deg,#7d76ff,#42d4cf);-webkit-background-clip:text;background-clip:text;color:transparent}
+.land .hero p{color:#bfc6d6;max-width:540px;margin:14px auto 0;font-size:15.5px}
+.role-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:8px}
+.role-card{background:#16213a;border:1px solid #243150;border-radius:18px;padding:20px;text-align:left;transition:.16s;position:relative;overflow:hidden}
+.role-card:hover{transform:translateY(-3px);border-color:#3a4a72;box-shadow:0 16px 40px rgba(0,0,0,.4)}
+.role-card .ic{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;margin-bottom:14px}
+.role-card .ic svg{width:24px;height:24px;color:#fff}
+.role-card h3{font-family:var(--disp);font-size:17px;margin:0;color:#fff}
+.role-card .ph{font-size:12.5px;color:#7c87a0;margin-top:3px;font-weight:600}
+.role-card .ds{font-size:13px;color:#aab3c8;margin-top:10px;line-height:1.5}
+.role-card .dev{position:absolute;top:16px;right:16px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#6b748c;background:#0f1830;padding:4px 8px;border-radius:7px}
+.land .foot{text-align:center;color:#6b748c;font-size:13px;margin-top:26px;line-height:1.7}
+
+/* auth / login */
+.auth-card{width:430px;max-width:100%;height:660px;max-height:calc(100vh - 110px);border-radius:32px;overflow:hidden;box-shadow:0 40px 90px rgba(0,0,0,.5)}
+.auth{position:relative;height:100%;flex:1;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;color:#fff}
+.auth.teal{background:linear-gradient(155deg,#13b1b1 0%,#0B7A7E 52%,#085457 100%)}
+.auth.ind{background:linear-gradient(155deg,#7d76ff 0%,#4F46E5 52%,#332aae 100%)}
+.auth .blob{position:absolute;border-radius:50%}
+.auth .b1{width:260px;height:260px;background:rgba(255,255,255,.13);top:-90px;right:-70px}
+.auth .b2{width:170px;height:170px;background:rgba(255,255,255,.08);top:130px;left:-80px}
+.auth .b3{width:84px;height:84px;border:2px solid rgba(255,255,255,.22);top:70px;left:54px}
+.auth .b4{width:14px;height:14px;background:rgba(255,255,255,.5);top:150px;right:70px}
+.auth .top{position:relative;z-index:1;padding:52px 30px 26px;flex:1}
+.auth .badge{width:62px;height:62px;border-radius:19px;background:rgba(255,255,255,.18);display:grid;place-items:center;box-shadow:0 12px 30px rgba(0,0,0,.2)}
+.auth .badge svg{width:32px;height:32px}
+.auth .brand{font-family:var(--disp);font-weight:800;font-size:30px;margin-top:20px;letter-spacing:-.5px}
+.auth .tag{opacity:.86;font-size:14.5px;margin-top:8px;max-width:260px;line-height:1.5}
+.auth .asas{margin-top:18px;display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);padding:7px 13px;border-radius:999px;font-size:12.5px;font-weight:600}
+.auth .asas svg{width:15px;height:15px}
+.auth .sheet{position:relative;z-index:1;background:#fff;color:var(--ink);border-radius:30px 30px 0 0;padding:26px 26px 28px;box-shadow:0 -12px 40px rgba(0,0,0,.16);animation:sheetUp .3s ease}
+@keyframes sheetUp{from{transform:translateY(24px)}to{transform:translateY(0)}}
+.auth .sheet h3{font-family:var(--disp);font-size:20px;margin:0 0 4px}
+.auth .sheet .sub{color:var(--ink-soft);font-size:13px;margin-bottom:16px}
+.phone-in{display:flex;align-items:center;border:1.6px solid var(--line);border-radius:14px;overflow:hidden;transition:.15s}
+.phone-in:focus-within{border-color:var(--teal)}
+.auth.ind .phone-in:focus-within{border-color:var(--indigo)}
+.phone-in .cc{padding:15px 13px;background:#F2F8F8;font-weight:700;color:var(--ink-soft);border-right:1.6px solid var(--line)}
+.phone-in input{flex:1;border:none;outline:none;padding:15px 14px;font-size:17px;font-weight:600;letter-spacing:.5px;background:none}
+.otp-row{display:flex;gap:11px;justify-content:space-between;margin:4px 0 2px}
+.otp-row input{width:100%;aspect-ratio:1;text-align:center;font-size:25px;font-weight:800;border:1.6px solid var(--line);border-radius:15px;outline:none;transition:.15s;background:#F7FBFB;color:var(--ink)}
+.otp-row input:focus{border-color:var(--teal);background:#fff;transform:translateY(-2px);box-shadow:0 6px 16px rgba(14,155,160,.18)}
+.auth.ind .otp-row input:focus{border-color:var(--indigo);box-shadow:0 6px 16px rgba(79,70,229,.18)}
+.auth .hintpill{display:inline-flex;align-items:center;gap:7px;background:var(--marigold-tint);color:var(--marigold-deep);padding:9px 13px;border-radius:11px;font-size:12.5px;font-weight:600;margin-top:14px}
+.auth .hintpill svg{width:15px;height:15px}
+.auth .lk{background:none;color:var(--teal);font-weight:700;font-size:13.5px;display:inline-flex;align-items:center;gap:5px}
+.auth.ind .lk{color:var(--indigo)}
+.list-row{display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid var(--line)}
+.list-row:last-child{border-bottom:none}
+.photo-tile{aspect-ratio:1;border-radius:13px;background:var(--teal-tint);display:grid;place-items:center;color:var(--teal);border:1.5px dashed var(--teal)}
+.photo-tile.has{background-size:cover;border-style:solid}
+.empty{text-align:center;padding:40px 22px;color:var(--ink-soft)}
+.empty .ic{width:64px;height:64px;border-radius:20px;background:var(--teal-tint);display:grid;place-items:center;margin:0 auto 14px}
+.empty .ic svg{width:30px;height:30px;color:var(--teal)}
+.qty{display:flex;align-items:center;gap:12px}
+.qty button{width:32px;height:32px;border-radius:9px;background:var(--teal-tint);color:var(--teal-deep);font-weight:800;font-size:18px;display:grid;place-items:center}
+.seg{display:flex;background:#EEF2F2;border-radius:13px;padding:4px;gap:4px}
+.seg button{flex:1;padding:11px;border-radius:10px;font-weight:700;font-size:13.5px;color:var(--ink-soft)}
+.seg button.on{background:#fff;color:var(--teal);box-shadow:var(--shadow-sm)}
+
+@media(max-width:560px){
+  #stage{padding:0}
+  .phone{width:100%;border-radius:0;padding:0;box-shadow:none}
+  .phone .notch{display:none}
+  .screen{border-radius:0;height:auto;min-height:calc(100vh - 50px);max-height:none}
+  .viewport{max-height:none}
+  .laptop{flex-direction:column;border-radius:0}
+  .lt-side{width:100%;flex-direction:row;overflow-x:auto;padding:12px}
+  .lt-side .brand{display:none}.lt-side .who{display:none}
+  .lt-nav{flex-direction:column;font-size:11px;gap:5px;white-space:nowrap}
+  .lt-main{max-height:none}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .lt-body{padding:18px}
+  .table-wrap{overflow-x:auto}
+}
+</style>
+</head>
+<body>
+
+<div id="persona-bar"></div>
+<div id="stage"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   ICONS
+============================================================ */
+const I = (() => {
+  const s = (p) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+  return {
+    bell:s('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>'),
+    check:s('<polyline points="20 6 9 17 4 12"/>'),
+    checkc:s('<circle cx="12" cy="12" r="9"/><polyline points="8.5 12 11 14.5 15.5 9.5"/>'),
+    camera:s('<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>'),
+    truck:s('<rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>'),
+    box:s('<path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.3 7 12 12 20.7 7"/><line x1="12" y1="22" x2="12" y2="12"/>'),
+    home:s('<path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>'),
+    list:s('<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/>'),
+    user:s('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'),
+    users:s('<circle cx="9" cy="8" r="3.4"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.2a3.4 3.4 0 0 1 0 6.6"/><path d="M17 14.5a6 6 0 0 1 4 5.5"/>'),
+    plus:s('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'),
+    phone:s('<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/>'),
+    clock:s('<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/>'),
+    rupee:s('<path d="M6 4h11M6 8h11M15.5 4c0 4-3 6-7 6h1l6 8"/>'),
+    shirt:s('<path d="M16 3 21 7 18 10 17 9V21H7V9L6 10 3 7 8 3a4 4 0 0 0 8 0z"/>'),
+    iron:s('<path d="M3 14a9 9 0 0 1 9-5h7a2 2 0 0 1 2 2v3z"/><line x1="3" y1="18" x2="13" y2="18"/><circle cx="16" cy="13.5" r="1"/>'),
+    sparkle:s('<path d="M12 3 13.8 8.5 19.5 10.2 13.8 12 12 17.5 10.2 12 4.5 10.2 10.2 8.5z"/><path d="M19 4v3M20.5 5.5h-3"/>'),
+    drop:s('<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>'),
+    location:s('<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>'),
+    card:s('<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>'),
+    cash:s('<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><line x1="6" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="18" y2="12"/>'),
+    star:s('<polygon points="12 2.5 15 9 22 9.5 16.5 14 18.3 21 12 17.3 5.7 21 7.5 14 2 9.5 9 9"/>'),
+    settings:s('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 0 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1-2.7H1a2 2 0 0 1 0-4h.1A1.6 1.6 0 0 0 2.6 7a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 9 2.6h.1A1.6 1.6 0 0 0 11 1a2 2 0 0 1 4 0v.1A1.6 1.6 0 0 0 17 2.6a1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1 2.7H23a2 2 0 0 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/>'),
+    logout:s('<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>'),
+    chev:s('<polyline points="9 6 15 12 9 18"/>'),
+    edit:s('<path d="M11 4H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-6"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/>'),
+    cal:s('<rect x="3" y="4.5" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2.5" x2="8" y2="6"/><line x1="16" y1="2.5" x2="16" y2="6"/>'),
+    chart:s('<line x1="4" y1="20" x2="20" y2="20"/><rect x="6" y="11" width="3" height="7"/><rect x="11" y="6" width="3" height="12"/><rect x="16" y="13" width="3" height="5"/>'),
+    bldg:s('<rect x="4" y="3" width="16" height="18" rx="1.5"/><line x1="9" y1="7" x2="9" y2="7"/><line x1="15" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="9" y2="11"/><line x1="15" y1="11" x2="15" y2="11"/><path d="M10 21v-4h4v4"/>'),
+    link:s('<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1.5-1.5"/>'),
+    shield:s('<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/>'),
+    grid:s('<rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/>'),
+    wallet:s('<path d="M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v2"/><path d="M3 7v11a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1v-3"/><path d="M21 11v5h-5a2.5 2.5 0 0 1 0-5z"/>'),
+    crown:s('<path d="M3 7l4 4 5-7 5 7 4-4v11H3z"/>'),
+    folder:s('<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'),
+    inbox:s('<path d="M3 12h5l2 3h4l2-3h5"/><path d="M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/>'),
+    play:s('<polygon points="6 4 20 12 6 20"/>'),
+    wifi:s('<path d="M2 8.5a16 16 0 0 1 20 0"/><path d="M5 12a11 11 0 0 1 14 0"/><path d="M8.5 15.5a6 6 0 0 1 7 0"/><line x1="12" y1="19" x2="12" y2="19"/>'),
+    batt:s('<rect x="2" y="7" width="18" height="10" rx="2"/><line x1="22" y1="11" x2="22" y2="13"/><rect x="4" y="9" width="13" height="6" rx="1" fill="currentColor" stroke="none"/>'),
+    back:s('<polyline points="15 18 9 12 15 6"/>'),
+    map:s('<polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/>'),
+    info:s('<circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12" y2="8"/>'),
+    tag:s('<path d="M20 12 12 20l-8-8V4h8z"/><circle cx="8" cy="8" r="1.3"/>'),
+  };
+})();
+
+/* ============================================================
+   STATE  (single shared store — powers cross-role demo)
+============================================================ */
+const SVCDEF = [
+  {id:'iron',  name:'Ironing',        icon:'iron',    unit:'garment', price:10, comm:0.25},
+  {id:'wash',  name:'Wash & Fold',    icon:'drop',    unit:'kg',      price:60, comm:2.00},
+  {id:'wnf',   name:'Wash & Iron',    icon:'shirt',   unit:'garment', price:25, comm:0.50},
+  {id:'dry',   name:'Dry Cleaning',   icon:'sparkle', unit:'item',    price:120,comm:5.00},
+  {id:'starch',name:'Starch & Press', icon:'iron',    unit:'garment', price:18, comm:0.40},
+];
+
+let UID = 1043;
+const now = Date.now();
+const mins = m => now - m*60000;
+
+const S = {
+  settings:{ approvalGate:true, photoProof:true, inAppPay:true },
+  chores:[
+    {id:'laundry', brand:'MeriLaundry', tagline:'Fresh clothes, zero hassle', status:'active'},
+    {id:'raddi',   brand:'RaddiWala',   tagline:'Scrap pickup made simple',   status:'coming'},
+    {id:'cobbler', brand:'MochiPro',    tagline:'Shoe & bag repair at home',  status:'coming'},
+  ],
+  services: SVCDEF,
+  partnerMgrs:[
+    {id:'pm1', name:'Anita Rao',  phone:'90000 00050', region:'Pune West'},
+    {id:'pm2', name:'Vikram Sethi',phone:'90000 00051', region:'Pune East'},
+  ],
+  providers:[
+    {id:'sp1', chore:'laundry', shop:'Sai Laundry', owner:'Akash', phone:'90000 00001',
+      status:'active', pmId:'pm1', color:'#0E9BA0', gst:'27ABCDE1234F1Z5', bank:'HDFC ****4421',
+      upi:'sharmalaundry@okhdfc', qr:true,
+      rating:4.8, since:'2024', hours:'8:00 AM – 9:00 PM',
+      services:[{id:'iron',price:10,fee:0.25},{id:'wnf',price:25,fee:0.5},{id:'wash',price:60,fee:2},{id:'dry',price:120,fee:5}]},
+    {id:'sp2', chore:'laundry', shop:'Bright Wash Studio', owner:'Imran Khan', phone:'90000 00002',
+      status:'pending', pmId:null, color:'#4F46E5'},
+    {id:'sp3', chore:'laundry', shop:'SnowWhite Dhobi', owner:'Meena Joshi', phone:'90000 00003',
+      status:'active', pmId:'pm1', color:'#E8920C', rating:4.6, hours:'9:00 AM – 8:00 PM',
+      services:[{id:'iron',price:9,fee:0.25},{id:'wnf',price:22,fee:0.5}]},
+  ],
+  coworkers:[
+    {id:'cw1', spId:'sp1', name:'Vikas',     phone:'90000 00021', job:'Laundry staff'},
+    {id:'cw2', spId:'sp1', name:'Sita Devi', phone:'90000 00022', job:'Laundry staff'},
+  ],
+  customers:[
+    {id:'cu1', name:'Priya Deshpande', phone:'90000 00100', providers:['sp1'], address:'A-204, Lake View, Baner, Pune'},
+    {id:'cu2', name:'Amit Verma',      phone:'90000 00101', providers:['sp1'], address:'12 Rose Society, Aundh, Pune'},
+    {id:'cu3', name:'Fatima Shaikh',   phone:'90000 00102', providers:['sp1'], address:'5B Green Park, Wakad, Pune'},
+    {id:'cu4', name:'Karan Mehta',     phone:'90000 00103', providers:[], address:'9 Hill Road, Kothrud, Pune'},
+  ],
+  linkRequests:[
+    {id:'lr1', custId:'cu2', spId:'sp3', status:'pending'},
+  ],
+  orders:[
+    { id:'ML-1042', spId:'sp1', custId:'cu1', type:'pickup', status:'placed',
+      address:'A-204, Lake View, Baner, Pune', slot:'Today, 7–9 PM', assignedCw:null, payMethod:null, paid:false,
+      items:[],
+      t:[['placed',mins(4)]] },
+    { id:'ML-1041', spId:'sp1', custId:'cu1', type:'pickup', status:'priced',
+      address:'A-204, Lake View, Baner, Pune', slot:'Today, 5–7 PM', assignedCw:'cw1', payMethod:null, paid:false,
+      items:[{sid:'wnf',name:'Wash & Iron',qty:8,price:25,photos:1},{sid:'iron',name:'Ironing',qty:5,price:10,photos:0}],
+      t:[['placed',mins(180)],['confirmed',mins(170)],['picked_up',mins(120)],['priced',mins(90)]] },
+    { id:'ML-1037', spId:'sp1', custId:'cu1', type:'pickup', status:'delivered',
+      address:'A-204, Lake View, Baner, Pune', slot:'Today, 2–4 PM', assignedCw:'cw1', payMethod:null, paid:false,
+      items:[{sid:'iron',name:'Ironing',qty:12,price:10,photos:1}],
+      t:[['placed',mins(300)],['confirmed',mins(290)],['picked_up',mins(260)],['priced',mins(240)],['approved',mins(235)],['in_progress',mins(230)],['ready',mins(60)],['out_for_delivery',mins(30)],['delivered',mins(8)]] },
+    { id:'ML-1040', spId:'sp1', custId:'cu2', type:'pickup', status:'out_for_delivery',
+      address:'12 Rose Society, Aundh, Pune', slot:'Today, 6–8 PM', assignedCw:'cw1', payMethod:null, paid:false,
+      items:[{sid:'dry',name:'Dry Cleaning',qty:2,price:120,photos:2},{sid:'iron',name:'Ironing',qty:6,price:10,photos:0}],
+      t:[['placed',mins(420)],['confirmed',mins(410)],['picked_up',mins(360)],['priced',mins(330)],['approved',mins(320)],['in_progress',mins(310)],['ready',mins(60)],['out_for_delivery',mins(20)]] },
+    { id:'ML-1039', spId:'sp1', custId:'cu1', type:'pickup', status:'closed',
+      address:'A-204, Lake View, Baner, Pune', slot:'Yesterday, 4–6 PM', assignedCw:'cw1', payMethod:'inapp', paid:true,
+      items:[{sid:'wash',name:'Wash & Fold',qty:4,price:60,photos:1}],
+      t:[['placed',mins(1600)],['closed',mins(1300)]] },
+    { id:'ML-1038', spId:'sp1', custId:'cu2', type:'dropoff', status:'closed',
+      address:'Shop drop-off', slot:'Yesterday', assignedCw:null, payMethod:'cash', paid:true,
+      items:[{sid:'iron',name:'Ironing',qty:20,price:10,photos:0}],
+      t:[['placed',mins(1700)],['closed',mins(1500)]] },
+  ],
+  authed:{},
+  session:{ role:null, id:null, persona:null, authed:false },
+};
+
+const PERSONAS = {
+  superadmin:{role:'superadmin', name:'You — Founder', phone:'90000 00000', sub:'Platform owner', icon:'crown', color:'#4F46E5', desc:'Run the whole platform. Create chores, set commissions, manage partner managers, release payouts, flip features on or off.'},
+  pm:{role:'pm', id:'pm1', name:'Anita Rao', phone:'90000 00050', sub:'Partner Manager', icon:'folder', color:'#7C3AED', desc:'Onboard new laundries, set up their menu & bank details, and approve customers who want to add a new shop.'},
+  provider:{role:'provider', id:'sp1', name:'Akash', phone:'90000 00001', sub:'Sai Laundry', icon:'shirt', color:'#0E9BA0', desc:'The owner. Takes orders, picks up, processes, prices, delivers and gets paid — and is the only one who can add staff.'},
+  coworker:{role:'coworker', id:'cw1', name:'Vikas', phone:'90000 00021', sub:'Laundry staff', icon:'user', color:'#E8920C', desc:'Works alongside the owner — can pick up, count items, process and deliver any order assigned to them. Same job, simpler screen.'},
+  customer:{role:'customer', id:'cu1', name:'Priya Deshpande', phone:'90000 00100', sub:'Customer', icon:'user', color:'#16A06B', desc:'Already a Sai Laundry customer. Places orders, tracks live, approves price, pays in-app or by UPI/cash.'},
+  customer2:{role:'customer', id:'cu4', name:'Karan Mehta', phone:'90000 00103', sub:'New customer', icon:'user', color:'#0EA5A5', desc:'Brand new — not tied to any laundry yet. Picks a shop, and the first order links them to it.'},
+};
+
+/* ============================================================
+   HELPERS
+============================================================ */
+const $ = id => document.getElementById(id);
+const money = n => '₹' + Number(n).toLocaleString('en-IN', {maximumFractionDigits:2});
+const sp  = id => S.providers.find(p=>p.id===id);
+const cust= id => S.customers.find(c=>c.id===id);
+const cw  = id => S.coworkers.find(c=>c.id===id);
+const pm  = id => S.partnerMgrs.find(p=>p.id===id);
+const svc = id => S.services.find(s=>s.id===id);
+const ord = id => S.orders.find(o=>o.id===id);
+const initials = n => n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+// Avatar that shows an uploaded photo if present, else coloured initials.
+function av(name, color, photo, size){
+  const s=size||42;
+  if(photo) return `<div class="avatar" style="width:${s}px;height:${s}px;background-image:url('${photo}');background-size:cover;background-position:center"></div>`;
+  return `<div class="avatar" style="width:${s}px;height:${s}px;background:${color}">${initials(name)}</div>`;
+}
+// Reads a chosen image file to a data URL and stores it, then re-renders.
+function pickPhoto(input){
+  const f=input.files&&input.files[0]; if(!f) return;
+  const tgt=input.dataset.tgt, id=input.dataset.id;
+  const r=new FileReader();
+  r.onload=()=>{ if(tgt==='cw') S.cwPhoto=r.result; else if(tgt==='owner'){const p=sp(id); if(p)p.ownerPhoto=r.result;} render(); };
+  r.readAsDataURL(f);
+}
+
+// Generates a QR-like SVG (finder patterns + deterministic module fill) from a seed string.
+function qrCode(seed, size){
+  size=size||168; const n=25, cell=size/n;
+  let h=2166136261>>>0; const str=String(seed||'')+'@upi';
+  for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}
+  const rnd=()=>{h=(Math.imul(h,1103515245)+12345)>>>0;return (h>>>17)&1;};
+  const fixed=[];for(let y=0;y<n;y++){fixed.push(new Array(n).fill(0));}
+  const finder=(gx,gy)=>{for(let y=0;y<7;y++)for(let x=0;x<7;x++){
+    const on=(x===0||x===6||y===0||y===6)||(x>=2&&x<=4&&y>=2&&y<=4);
+    fixed[gy+y][gx+x]=on?2:1;}};
+  finder(0,0);finder(n-7,0);finder(0,n-7);
+  let r='';
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+    const f=fixed[y][x]; let on = f? (f===2) : rnd();
+    if(on) r+=`<rect x="${(x*cell).toFixed(2)}" y="${(y*cell).toFixed(2)}" width="${cell.toFixed(2)}" height="${cell.toFixed(2)}"/>`;
+  }
+  return `<svg viewBox="0 0 ${size} ${size}" style="width:${size}px;height:${size}px;border-radius:12px" fill="#0F2A2B"><rect width="${size}" height="${size}" fill="#fff" rx="12"/>${r}</svg>`;
+}
+
+const FLOW_PICKUP  = ['placed','confirmed','picked_up','priced','approved','in_progress','ready','out_for_delivery','delivered','paid','closed'];
+const FLOW_DROPOFF = ['placed','confirmed','priced','approved','in_progress','ready','delivered','paid','closed'];
+const flowOf = o => o.type==='pickup'?FLOW_PICKUP:FLOW_DROPOFF;
+const STATUS = {
+  placed:{l:'New order',c:'gold',i:'bell'}, confirmed:{l:'Confirmed',c:'teal',i:'check'},
+  picked_up:{l:'Picked up',c:'teal',i:'truck'}, priced:{l:'Price sent',c:'gold',i:'tag'},
+  approved:{l:'Approved',c:'green',i:'checkc'}, in_progress:{l:'In progress',c:'teal',i:'drop'},
+  ready:{l:'Ready',c:'teal',i:'sparkle'}, out_for_delivery:{l:'Out for delivery',c:'teal',i:'truck'},
+  delivered:{l:'Delivered',c:'green',i:'box'}, paid:{l:'Paid',c:'green',i:'rupee'}, closed:{l:'Completed',c:'green',i:'checkc'},
+};
+const orderTotal = o => o.items.reduce((s,i)=>s + i.qty*i.price, 0);
+const svcFee = (spId, sid) => { const p=sp(spId); const ps=p&&p.services&&p.services.find(x=>x.id===sid); if(ps&&ps.fee!=null) return ps.fee; const d=svc(sid); return d?d.comm:0; };
+const orderComm  = o => o.items.reduce((s,i)=> s + svcFee(o.spId,i.sid)*i.qty, 0);
+const ts = t => { const m=Math.round((now-t)/60000); if(m<1)return'just now'; if(m<60)return m+' min ago'; const h=Math.round(m/60); if(h<24)return h+' hr ago'; return Math.round(h/24)+' d ago'; };
+
+let toastTimer;
+function toast(msg, icon='check'){
+  const t=$('toast'); t.innerHTML=I[icon]+'<span>'+msg+'</span>'; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+/* nav state per role */
+let view = {};
+function go(v, extra){ view[S.session.role]=v; view._x = extra || null; render(); window.scrollTo&&window.scrollTo(0,0); const vp=document.querySelector('.viewport,.lt-main'); if(vp)vp.scrollTop=0; }
+function curView(def){ return view[S.session.role] || def; }
+
+function enter(key){
+  const p = PERSONAS[key];
+  S.session = {role:p.role, id:p.id||null, persona:key, authed:!!S.authed[key], loginStep:'phone'};
+  view = {}; render();
+}
+function backToSwitcher(){ S.session={role:null,id:null,persona:null,authed:false}; render(); }
+function otpAdvance(el,i){ el.value=el.value.replace(/\D/g,''); if(el.value&&i<3){const n=document.getElementById('otp'+(i+1)); if(n)n.focus();} }
+
+/* ============================================================
+   RENDER ROOT
+============================================================ */
+function render(){
+  renderPersonaBar();
+  const stage=$('stage'); const r=S.session.role;
+  if(!r){ stage.innerHTML = switcher(); return; }
+  if(!S.session.authed){ stage.innerHTML = authFrame(); return; }
+  if(r==='superadmin'||r==='pm'){ stage.innerHTML = desktopFrame(r); }
+  else { stage.innerHTML = phoneFrame(r); }
+}
+
+function authFrame(){
+  const key=S.session.persona; const p=PERSONAS[key];
+  const mobile = !(p.role==='superadmin'||p.role==='pm');
+  const inner = authScreen(key);
+  if(mobile) return `<div class="phone"><div class="notch"></div><div class="screen" style="background:#0b5c5f">${statusbar(true)}${inner}</div></div>`;
+  return `<div class="auth-card">${inner}</div>`;
+}
+function authScreen(key){
+  const p=PERSONAS[key];
+  const teal = !(p.role==='superadmin'||p.role==='pm');
+  const cls = teal?'teal':'ind'; const bcls=teal?'':'ind';
+  const brand = teal?'MeriLaundry':'ChoreVerse';
+  const tag = teal?'Fresh clothes, zero hassle.<br>Sign in to get started.':'The platform behind every neighbourhood chore.';
+  const step = S.session.loginStep||'phone';
+  let sheet;
+  if(step==='phone'){
+    sheet = `<h3>Enter your mobile number</h3><div class="sub">We'll send a one-time code to verify it's you.</div>
+      <div class="phone-in"><span class="cc">🇮🇳 +91</span><input id="lg-phone" inputmode="numeric" maxlength="11" value="${p.phone}" placeholder="00000 00000"></div>
+      <button class="btn ${bcls} lg mt16" data-act="sendotp">Get OTP ${I.chev}</button>
+      <div class="muted tac" style="font-size:11.5px;margin-top:14px">Your number decides what you see — owner, staff or customer.</div>`;
+  } else {
+    sheet = `<button class="lk" data-act="loginback" style="margin-bottom:8px">${I.back} Change number</button>
+      <h3>Verify your number</h3><div class="sub">Enter the code sent to +91 ${S.session.loginPhone||p.phone}</div>
+      <div class="otp-row">${[0,1,2,3].map(i=>`<input id="otp${i}" inputmode="numeric" maxlength="1" oninput="otpAdvance(this,${i})">`).join('')}</div>
+      <div class="hintpill">${I.info} Demo code is 0000</div>
+      <button class="btn ${bcls} lg mt16" data-act="verifyotp">Verify & continue ${I.check}</button>
+      <div class="tac mt16" style="font-size:13px;color:var(--ink-soft)">Didn't get it? <button class="lk" data-act="sendotp">Resend</button> · <button class="lk" data-act="otpfill">Autofill 0000</button></div>`;
+  }
+  return `<div class="auth ${cls}">
+    <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div>
+    <div class="top">
+      <div class="badge">${teal?I.drop:I.grid}</div>
+      <div class="brand">${brand}</div>
+      <div class="tag">${tag}</div>
+      <div class="asas">${I[p.icon]} Signing in as ${p.sub}</div>
+    </div>
+    <div class="sheet">${sheet}</div>
+  </div>`;
+}
+
+function renderPersonaBar(){
+  const order=['superadmin','pm','provider','coworker','customer','customer2'];
+  const chips = order.map(k=>{
+    const p=PERSONAS[k]; const on = S.session.persona===k;
+    return `<button class="pchip ${on?'on':''}" data-act="enter" data-role="${k}">${I[p.icon]}${p.sub}</button>`;
+  }).join('');
+  $('persona-bar').innerHTML = `
+    <div class="cv-logo"><span class="dot">${I.grid}</span>ChoreVerse <span class="lbl">demo</span></div>
+    <div class="pchips">${chips}</div>
+    ${S.session.role?`<button class="reset" data-act="switcher">↺ All perspectives</button>`:''}`;
+}
+
+/* ============================================================
+   SWITCHER (landing)
+============================================================ */
+function switcher(){
+  const cards = ['provider','customer','customer2','coworker','pm','superadmin'].map(k=>{
+    const p=PERSONAS[k];
+    const dev = (k==='superadmin'||k==='pm')?'Laptop':'Mobile';
+    const hero = k==='provider'?'<div class="dev" style="background:#2b3a1a;color:#a3d977">★ Start here</div>':`<div class="dev">${dev}</div>`;
+    return `<button class="role-card" data-act="enter" data-role="${k}">
+      ${hero}
+      <div class="ic" style="background:${p.color}">${I[p.icon]}</div>
+      <h3>${p.sub}</h3><div class="ph">${p.name} · ${p.phone}</div>
+      <div class="ds">${p.desc}</div></button>`;
+  }).join('');
+  return `<div class="land">
+    <div class="hero">
+      <div class="eyebrow">ChoreVerse platform · first chore</div>
+      <h1>One platform.<br><span class="tl-grad">Every neighbourhood chore.</span></h1>
+      <p>This is a live, clickable prototype. Pick any role below to step into their screen. Actions are shared across roles — place an order as a customer, then jump to the laundry owner's phone and watch it arrive.</p>
+    </div>
+    <div class="role-grid">${cards}</div>
+    <div class="foot">Login is by mobile number — the number decides the role.<br>
+    Today's chore: <b style="color:#42d4cf">MeriLaundry</b> · Coming next: RaddiWala, MochiPro</div>
+  </div>`;
+}
+
+/* ============================================================
+   FRAMES
+============================================================ */
+function statusbar(light){
+  const t=new Date(); let h=t.getHours(), ap=h>=12?'PM':'AM'; h=h%12||12;
+  const mm=String(t.getMinutes()).padStart(2,'0');
+  return `<div class="statusbar"${light?' style="color:#fff"':''}><span>${h}:${mm} ${ap}</span>
+    <span class="right">${I.wifi}${I.batt}</span></div>`;
+}
+function phoneFrame(role){
+  let inner;
+  if(role==='provider') inner = providerApp();
+  else if(role==='customer') inner = customerApp();
+  else inner = coworkerApp();
+  return `<div class="phone"><div class="notch"></div><div class="screen">${statusbar()}${inner}</div></div>`;
+}
+function desktopFrame(role){
+  const nav = role==='superadmin'?[
+    ['sa-dash','Dashboard','chart'],['sa-chores','Chores & services','grid'],['sa-providers','Service providers','bldg'],
+    ['sa-pms','Partner managers','users'],['sa-payouts','Payouts','wallet'],['sa-settings','Features','settings']
+  ]:[
+    ['pm-portfolio','My laundries','folder'],['pm-onboard','Onboarding queue','inbox'],['pm-requests','Approval requests','shield']
+  ];
+  const v = curView(nav[0][0]);
+  const who = role==='superadmin'?PERSONAS.superadmin:PERSONAS.pm;
+  const navHtml = nav.map(n=>`<button class="lt-nav ${v.startsWith(n[0])?'on':''}" data-act="go" data-v="${n[0]}">${I[n[2]]}<span>${n[1]}</span></button>`).join('');
+  let body, title, sub;
+  if(role==='superadmin'){ [body,title,sub]=saRouter(v); }
+  else { [body,title,sub]=pmRouter(v); }
+  return `<div class="laptop">
+    <div class="lt-side">
+      <div class="brand"><span class="dot">${I.grid}</span>ChoreVerse</div>
+      ${navHtml}
+      <div class="who"><b>${who.name}</b>${who.sub} · ${who.phone}</div>
+    </div>
+    <div class="lt-main">
+      <div class="lt-top"><div><h1>${title}</h1><div class="sub">${sub}</div></div>
+        <button class="btn ind sm" data-act="switcher">↺ Switch role</button></div>
+      <div class="lt-body">${body}</div>
+    </div></div>`;
+}
+
+/* ============================================================
+   PROVIDER APP  (HERO)
+============================================================ */
+function providerApp(){
+  const v = curView('sp-home');
+  let body, nav=true;
+  if(v==='sp-home') body=spHome();
+  else if(v==='sp-order') {body=spOrder(view._x); nav=false;}
+  else if(v==='sp-price') {body=spPrice(view._x); nav=false;}
+  else if(v==='sp-new') {body=spNew(); nav=false;}
+  else if(v==='sp-items') {body=editItems(view._x); nav=false;}
+  else if(v==='sp-menu') body=spMenu();
+  else if(v==='sp-customers') body=spCustomers();
+  else if(v.startsWith('sp-addcust')) {body=spAddCust(); nav=false;}
+  else if(v==='sp-team') body=spTeam();
+  else if(v.startsWith('sp-addcw')) {body=spAddCw(); nav=false;}
+  else if(v==='sp-money') body=spMoney();
+  else if(v==='sp-shop') body=spShop();
+  else body=spHome();
+  const navBar = nav?bottomNav('provider',v):'';
+  return `<div class="viewport">${body}</div>${navBar}`;
+}
+function bottomNav(role,v){
+  const sets={
+    provider:[['sp-home','Home','home'],['sp-menu','Menu','list'],['sp-money','Earnings','wallet'],['sp-team','Team','users'],['sp-shop','Shop','bldg']],
+    customer:[['cust-home','Home','home'],['cust-orders','Orders','box'],['cust-shops','Shops','bldg'],['cust-me','Me','user']],
+  };
+  return `<div class="bnav">${sets[role].map(n=>`<button class="${v.startsWith(n[0])?'on':''}" data-act="go" data-v="${n[0]}">${I[n[2]]}<span>${n[1]}</span></button>`).join('')}</div>`;
+}
+
+function spHome(){
+  const me=sp('sp1');
+  const mine = S.orders.filter(o=>o.spId==='sp1');
+  const isNew = o=>o.status==='placed';
+  const active = mine.filter(o=>!['closed'].includes(o.status));
+  const newOnes = active.filter(isNew);
+  const todayEarn = mine.filter(o=>o.paid).reduce((s,o)=>s+orderTotal(o),0);
+  const dueComm = mine.filter(o=>o.paid&&o.payMethod!=='inapp').reduce((s,o)=>s+orderComm(o),0);
+
+  const alert = newOnes.length? `<div class="card pulse" style="margin-top:-26px;position:relative;z-index:2;border:1.5px solid var(--marigold)">
+      <div class="row center between"><div class="row center" style="gap:11px">
+        <div class="avatar" style="background:var(--marigold)">${I.bell}</div>
+        <div><div class="b">${newOnes.length} new order${newOnes.length>1?'s':''} waiting</div>
+        <div class="muted" style="font-size:13px">Tap to confirm before the customer waits</div></div></div></div>
+      <button class="btn gold mt12" data-act="go" data-v="sp-order" data-x="${newOnes[0].id}">${I.play} Confirm now</button>
+    </div>` : '';
+
+  const list = active.length? active.map(orderRowSP).join('') :
+    `<div class="empty"><div class="ic">${I.checkc}</div><div class="b">All caught up</div><div class="muted">No active orders right now.</div></div>`;
+
+  return `
+  <div class="appbar ml-mark">
+    <div class="row between center"><div class="ml-logo"><span class="bub">${I.drop}</span>MeriLaundry</div>
+    <div style="position:relative;z-index:1">${I.bell}</div></div>
+    <div class="hi">Namaste, ${me.owner.split(' ')[0]} 👋 · ${me.shop}</div>
+  </div>
+  ${alert}
+  <div class="row" style="margin:14px 18px 0;gap:12px">
+    <div class="tile grow"><div class="muted" style="font-size:12px">Earned today</div><div class="b" style="font-size:22px;font-family:var(--disp)">${money(todayEarn)}</div></div>
+    <div class="tile grow" style="cursor:pointer" data-act="go" data-v="sp-money"><div class="muted" style="font-size:12px">Platform dues</div><div class="b" style="font-size:22px;font-family:var(--disp);color:var(--marigold-deep)">${money(dueComm)}</div></div>
+  </div>
+  <div style="margin:12px 18px 0"><button class="btn" data-act="go" data-v="sp-new">${I.plus} New counter order</button></div>
+  <div class="sec-pad row between center" style="margin-top:18px"><h2 class="scr">Active orders</h2><span class="pill grey">${active.length}</span></div>
+  <div style="padding-bottom:14px">${list}</div>`;
+}
+function orderRowSP(o){
+  const c=cust(o.custId); const st=STATUS[o.status];
+  const total = orderTotal(o);
+  return `<div class="card" style="cursor:pointer" data-act="go" data-v="sp-order" data-x="${o.id}">
+    <div class="row between center">
+      <div class="row center" style="gap:11px">
+        <div class="avatar" style="background:${o.status==='placed'?'var(--marigold)':'var(--teal)'}">${initials(c.name)}</div>
+        <div><div class="b">${c.name}</div><div class="muted" style="font-size:12.5px">${o.id} · ${o.type==='pickup'?'Pickup':'Drop-off'} · ${ts(o.t[o.t.length-1][1])}</div></div>
+      </div>
+      <div class="pill ${st.c}">${I[st.i]}${st.l}</div>
+    </div>
+    <div class="divider"></div>
+    <div class="row between center">
+      <div class="muted" style="font-size:13px">${o.items.length?o.items.reduce((a,i)=>a+i.qty,0)+' items · '+o.items.map(i=>i.name).join(', '):'Not itemised yet'}</div>
+      ${total?`<div class="b">${money(total)}</div>`:''}
+    </div>
+  </div>`;
+}
+
+function spHeader(title, back='sp-home'){
+  return `<div class="appbar"><div class="row center" style="gap:12px;position:relative;z-index:1">
+    <button data-act="go" data-v="${back}" style="color:#fff">${I.back}</button>
+    <div class="ml-logo" style="font-size:17px">${title}</div></div></div>`;
+}
+
+function spOrder(id){
+  const o=ord(id); const c=cust(o.custId); const st=STATUS[o.status];
+  const total=orderTotal(o); const comm=orderComm(o);
+  const cwName = o.assignedCw ? (o.assignedCw==='self'?'You (pickup)':cw(o.assignedCw).name) : null;
+
+  // timeline
+  const flow=flowOf(o); const done=o.t.map(x=>x[0]);
+  const curIdx = flow.indexOf(o.status);
+  const tl = flow.map((s,i)=>{
+    const st2=STATUS[s]; const isDone=i<curIdx, isNow=i===curIdx;
+    const tEntry=o.t.find(x=>x[0]===s);
+    return `<li class="${isDone?'done':isNow?'now':'pending'}"><span class="nod">${I[isDone||isNow?'check':st2.i]}</span>
+      <div><div class="t-main">${st2.l}</div>${tEntry?`<div class="t-sub">${ts(tEntry[1])}</div>`:''}</div></li>`;
+  }).join('');
+
+  // item lines
+  const items = o.items.length? o.items.map(i=>`<div class="row between" style="padding:9px 0;border-bottom:1px solid var(--line)">
+    <div><div class="sb">${i.name}</div><div class="muted" style="font-size:12px">${i.qty} × ${money(i.price)}${i.photos?` · ${i.photos} photo${i.photos>1?'s':''}`:''}</div></div>
+    <div class="b">${money(i.qty*i.price)}</div></div>`).join('') : `<div class="muted tac" style="padding:14px">Items not added yet</div>`;
+
+  // primary action by status
+  const A = spAction(o);
+
+  return `${spHeader('Order '+o.id)}
+  <div class="card" style="margin-top:-22px;position:relative;z-index:2">
+    <div class="row between center" style="gap:10px">
+      <div class="row center" style="gap:11px;min-width:0;flex:1"><div class="avatar" style="background:var(--teal)">${initials(c.name)}</div>
+      <div style="min-width:0"><div class="b" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div><div class="muted" style="font-size:12.5px">${c.phone}</div></div></div>
+      <a href="tel:" class="pill teal" style="flex-shrink:0" onclick="return false">${I.phone}Call</a>
+    </div>
+    <div class="divider"></div>
+    <div class="row" style="gap:10px;align-items:flex-start"><div style="color:var(--teal)">${I.location}</div>
+      <div><div class="sb" style="font-size:13.5px">${o.type==='pickup'?'Pickup & delivery':'Customer drop-off'}</div>
+      <div class="muted" style="font-size:13px">${o.address}</div>
+      <div class="muted" style="font-size:13px">${I.clock.replace('width="24"','')} ${o.slot}</div></div></div>
+    ${cwName?`<div class="pill grey mt12">${I.truck} ${cwName} assigned</div>`:''}
+  </div>
+
+  <div class="card">
+    <div class="row between center"><div class="kicker">Items & price</div>${total?`<span class="b">${money(total)}</span>`:''}</div>
+    <div class="mt8">${items}</div>
+    ${total?`<div class="row between mt12"><span class="muted" style="font-size:12.5px">Your earning ${money(total-comm)} · Platform ${money(comm)}</span></div>`:''}
+  </div>
+
+  <div class="card">
+    <div class="kicker">Progress</div>
+    <ul class="tl mt12">${tl}</ul>
+  </div>
+
+  ${A}
+  <div style="height:24px"></div>`;
+}
+
+function spAction(o){
+  const wrap = (html)=>`<div style="margin:0 18px 0">${html}</div>`;
+  switch(o.status){
+    case 'placed':
+      return wrap(`<button class="btn green lg" data-act="confirm" data-x="${o.id}">${I.check} Confirm this order</button>
+        <button class="btn ghost mt12" data-act="go" data-v="sp-items" data-x="${o.id}">${I.tag} Add / edit items</button>
+        <button class="btn ghost mt12" data-act="reject" data-x="${o.id}">Decline</button>`);
+    case 'confirmed':
+      if(o.type==='pickup'){
+        if(!o.assignedCw){
+          const cws=S.coworkers.filter(c=>c.spId==='sp1');
+          return wrap(`<div class="b" style="margin-bottom:8px">Who's picking this up?</div>
+            <button class="btn" data-act="assignpick" data-x="${o.id}" data-cw="self">${I.user} I'll pick it up myself</button>
+            ${cws.map(c=>`<button class="btn ghost mt12" data-act="assignpick" data-x="${o.id}" data-cw="${c.id}" style="justify-content:flex-start;gap:11px">${av(c.name,PERSONAS.coworker.color,c.photo,26)} Send ${c.name}</button>`).join('')}
+            <button class="btn ghost mt12" data-act="go" data-v="sp-items" data-x="${o.id}">${I.tag} Add / edit items</button>`);
+        }
+        const who=o.assignedCw==='self'?'you':cw(o.assignedCw).name;
+        return wrap(`<div class="card flush" style="background:var(--teal-tint);color:var(--teal-deep);padding:13px;margin-bottom:12px">${I.truck} Pickup assigned to ${who}${o.assignedCw==='self'?'':' · notified'}</div>
+          <button class="btn lg" data-act="pickup" data-x="${o.id}">${I.check} Mark picked up</button>
+          <button class="btn ghost sm mt12" data-act="go" data-v="sp-items" data-x="${o.id}">${I.tag} Add / edit items</button>
+          <button class="btn ghost sm mt12" data-act="reassign" data-x="${o.id}">Change who picks up</button>`);
+      }
+      return wrap(`<button class="btn lg" data-act="go" data-v="sp-price" data-x="${o.id}">${I.tag} Add items & set price</button>`);
+    case 'picked_up':
+      return wrap(`<button class="btn lg" data-act="go" data-v="sp-price" data-x="${o.id}">${I.tag} Add items & set price</button>`);
+    case 'priced':
+      return wrap(`<div class="card flush" style="background:var(--marigold-tint);text-align:center;padding:16px">${I.clock}
+        <div class="b mt8">Waiting for customer to approve the price</div>
+        <div class="muted" style="font-size:13px">They've been notified on their phone</div></div>`);
+    case 'approved':
+      return wrap(`<button class="btn lg" data-act="advance" data-x="${o.id}" data-to="in_progress">${I.drop} Start working</button>`);
+    case 'in_progress':
+      return wrap(`<button class="btn lg" data-act="advance" data-x="${o.id}" data-to="ready">${I.sparkle} Mark ready</button>`);
+    case 'ready':
+      if(o.type==='pickup') return wrap(`<button class="btn lg" data-act="advance" data-x="${o.id}" data-to="out_for_delivery">${I.truck} Send out for delivery</button>`);
+      return wrap(`<button class="btn lg" data-act="advance" data-x="${o.id}" data-to="delivered">${I.box} Customer collected</button>`);
+    case 'out_for_delivery':
+      return wrap(`<button class="btn lg" data-act="advance" data-x="${o.id}" data-to="delivered">${I.box} Mark delivered</button>`);
+    case 'delivered':
+      if(o.paySubmitted && !o.paid){
+        return wrap(`<div class="card flush" style="background:var(--marigold-tint);padding:15px;margin-bottom:12px">
+          <div class="b" style="color:var(--marigold-deep)">${o.payMethod==='upi'?'Customer paid '+money(orderTotal(o))+' by UPI':'Customer says cash paid · '+money(orderTotal(o))}</div>
+          <div class="muted" style="font-size:13px;margin-top:3px">${o.payMethod==='upi'?'They attached a payment screenshot. Check your UPI app, then confirm.':'Collect the cash, then confirm.'}</div>
+          ${o.payMethod==='upi'?`<button class="btn ghost sm mt12" data-act="toast" data-m="Opening screenshot (demo)">${I.camera} View screenshot</button>`:''}
+        </div>
+        <button class="btn green lg" data-act="confirmpay" data-x="${o.id}">${I.check} Confirm payment received</button>`);
+      }
+      return wrap(`<div class="b" style="margin-bottom:10px">${I.rupee} Collect payment — ${money(orderTotal(o))}</div>
+        <div class="row" style="gap:10px">
+        <button class="btn green" data-act="pay" data-x="${o.id}" data-m="inapp">${I.card} Paid in app</button>
+        <button class="btn ghost" data-act="pay" data-x="${o.id}" data-m="cash">${I.cash} Cash received</button></div>
+        <div class="muted tac" style="font-size:12px;margin-top:10px">Or wait for the customer to pay by UPI from their app</div>`);
+    case 'paid':
+      return wrap(`<button class="btn dark lg" data-act="advance" data-x="${o.id}" data-to="closed">${I.checkc} Close order</button>`);
+    case 'closed':
+      return wrap(`<div class="card flush" style="background:var(--green-tint);text-align:center;padding:16px;color:var(--green)">${I.checkc}
+        <div class="b mt8">Order completed${o.payMethod==='inapp'?' · paid in app':o.payMethod==='upi'?' · paid by UPI':o.payMethod==='cash'?' · paid by cash':''}</div></div>`);
+  }
+  return '';
+}
+
+function spNew(){
+  const customers=S.customers.filter(c=>c.providers.includes('sp1'));
+  if(!S.spDraft) S.spDraft={custId:(customers[0]||{}).id, type:'dropoff'};
+  const d=S.spDraft;
+  const opts=customers.map(c=>`<option value="${c.id}" ${d.custId===c.id?'selected':''}>${c.name} · ${c.phone}</option>`).join('');
+  return `${spHeader('New counter order','sp-home')}
+    <div class="card" style="margin-top:-22px;position:relative;z-index:2">
+      <div class="field"><label>Customer</label><select id="sn-cust">${opts}</select></div>
+      <div class="muted" style="font-size:12px;margin-top:6px">New face? Add them under Team → add a customer first.</div>
+      <div class="kicker mt16">Order type</div>
+      <div class="seg mt8">
+        <button class="${d.type==='dropoff'?'on':''}" data-act="sntype" data-t="dropoff">${I.bldg} Counter / drop-off</button>
+        <button class="${d.type==='pickup'?'on':''}" data-act="sntype" data-t="pickup">${I.truck} Pickup & deliver</button>
+      </div>
+    </div>
+    <div class="card" style="background:var(--teal-tint);color:var(--teal-deep)">${I.info}
+      <div style="font-size:13px;margin-top:6px">Next you'll count the clothes and set the price. The customer is right here at the counter, so there's no separate approval step.</div></div>
+    <div style="margin:0 18px 24px"><button class="btn lg" data-act="spnew">${I.tag} Add items & price</button></div>`;
+}
+
+function editItems(id){
+  const o=ord(id); const me=sp(o.spId)||sp('sp1');
+  const coworkerMode = S.session.role==='coworker';
+  const accent = coworkerMode?PERSONAS.coworker.color:'var(--teal)';
+  if(!o.draft) o.draft = me.services.map(s=>{
+    const ex=o.items.find(it=>it.sid===s.id);
+    return {sid:s.id, name:svc(s.id).name, qty: ex?ex.qty:0, price: ex?ex.price:s.price, photos: ex?(ex.photos||0):0};
+  });
+  const lines=o.draft.map((l,idx)=>{const d=svc(l.sid);
+    return `<div class="card flush" style="margin:0 0 12px;padding:14px">
+      <div class="row between center">
+        <div class="row center" style="gap:10px"><div class="avatar" style="background:var(--teal-tint);color:var(--teal-deep);width:38px;height:38px">${I[d.icon]}</div>
+        <div><div class="sb">${l.name}</div><div class="muted" style="font-size:12px">${money(l.price)} / ${d.unit}</div></div></div>
+        <div class="qty"><button data-act="qty" data-x="${id}" data-i="${idx}" data-d="-1">−</button>
+          <span class="b" style="min-width:22px;text-align:center">${l.qty}</span>
+          <button data-act="qty" data-x="${id}" data-i="${idx}" data-d="1">+</button></div>
+      </div>
+      ${l.qty>0?`<div class="row mt12" style="gap:10px"><button class="btn ghost sm" data-act="addphoto" data-x="${id}" data-i="${idx}">${I.camera} Photo ${l.photos?`(${l.photos})`:''}</button>
+        <button class="btn ghost sm" data-act="qty" data-x="${id}" data-i="${idx}" data-d="-99" style="color:var(--red);border-color:var(--red-tint)">${I.logout} Remove</button></div>`:''}
+    </div>`;}).join('');
+  const count=o.draft.reduce((s,l)=>s+l.qty,0);
+  const c=cust(o.custId);
+  const head = coworkerMode
+    ? `<div class="appbar" style="background:${PERSONAS.coworker.color}"><div class="row center" style="gap:12px;position:relative;z-index:1">
+         <button data-act="go" data-v="cw-task" data-x="${id}" style="color:#fff">${I.back}</button><div class="ml-logo" style="font-size:17px">Count items</div></div></div>`
+    : spHeader('Add / edit items','sp-order');
+  const body = `${head}
+    <div class="sec-pad"><div class="muted" style="font-size:13px">${coworkerMode?'Count what '+c.name+' is handing over. Use − to remove a line.':'Add or remove what the customer is sending. You can fine-tune the price later.'}</div></div>
+    <div style="padding:14px 18px 0">${lines}</div>
+    <div class="card" style="background:var(--ink);color:#fff"><div class="row between center"><span>Items counted</span><span class="b" style="font-size:20px;font-family:var(--disp)">${count}</span></div></div>
+    <div style="margin:0 18px 24px"><button class="btn lg" ${coworkerMode?`style="background:${PERSONAS.coworker.color};box-shadow:none"`:''} data-act="saveitems" data-x="${id}">${I.check} ${coworkerMode?'Save items':'Save items'}</button></div>`;
+  return coworkerMode ? body : body;
+}
+
+function spPrice(id){
+  const o=ord(id);
+  const me=sp('sp1');
+  // working copy stored on order.draft — pre-fill from any items the customer already listed
+  if(!o.draft) o.draft = me.services.map(s=>{
+    const ex=o.items.find(it=>it.sid===s.id);
+    return {sid:s.id, name:svc(s.id).name, qty: ex?ex.qty:0, price: ex?ex.price:s.price, photos: ex?(ex.photos||0):0};
+  });
+  const lines = o.draft.map((l,idx)=>{
+    const d=svc(l.sid);
+    return `<div class="card flush" style="margin:0 0 12px;padding:14px">
+      <div class="row between center">
+        <div class="row center" style="gap:10px"><div class="avatar" style="background:var(--teal-tint);color:var(--teal-deep);width:38px;height:38px">${I[d.icon]}</div>
+        <div><div class="sb">${l.name}</div><div class="muted" style="font-size:12px">${money(l.price)} / ${d.unit}</div></div></div>
+        <div class="qty"><button data-act="qty" data-x="${id}" data-i="${idx}" data-d="-1">−</button>
+          <span class="b" style="min-width:22px;text-align:center">${l.qty}</span>
+          <button data-act="qty" data-x="${id}" data-i="${idx}" data-d="1">+</button></div>
+      </div>
+      ${l.qty>0?`<div class="row mt12" style="gap:10px">
+        <button class="btn ghost sm" data-act="addphoto" data-x="${id}" data-i="${idx}">${I.camera} Photo ${l.photos?`(${l.photos})`:''}</button>
+        <div class="grow tar b" style="align-self:center">${money(l.qty*l.price)}</div></div>`:''}
+    </div>`;
+  }).join('');
+  const total = o.draft.reduce((s,l)=>s+l.qty*l.price,0);
+  const anyItems = o.draft.some(l=>l.qty>0);
+  const prefilled = o.items.length>0 && !o.walkin;
+  const note = o.walkin
+    ? 'Count what the customer brought to the counter and tap +. Add a photo as proof if you like.'
+    : (prefilled ? 'The customer listed these — adjust the counts to match what you received, then send the final price.'
+                 : 'Tap + to add what the customer gave you. Add a photo as proof for each lot.');
+  const sendLabel = o.walkin ? 'Confirm order & start' : 'Send price to customer for approval';
+  return `${spHeader(o.walkin?'Add items & price':'Itemise & price', 'sp-order')}
+  <div class="sec-pad"><div class="muted" style="font-size:13px">${note}</div></div>
+  <div style="padding:14px 18px 0">${lines}</div>
+  <div class="card" style="background:var(--ink);color:#fff">
+    <div class="row between center"><span>${o.walkin?'Total':'Total to send'}</span><span class="b" style="font-size:22px;font-family:var(--disp)">${money(total)}</span></div>
+  </div>
+  <div style="margin:0 18px 24px"><button class="btn gold lg" ${anyItems?'':'disabled'} data-act="sendprice" data-x="${id}">${I.tag} ${sendLabel}</button></div>`;
+}
+
+function spMenu(){
+  const me=sp('sp1');
+  const rows = me.services.map(s=>{const d=svc(s.id); const editing=S.editSvc===s.id;
+    return `<div class="card"><div class="row between center">
+      <div class="row center" style="gap:12px"><div class="avatar" style="background:var(--teal-tint);color:var(--teal-deep)">${I[d.icon]}</div>
+      <div><div class="b">${d.name}</div><div class="muted" style="font-size:12.5px">per ${d.unit} · platform fee ${money(s.fee!=null?s.fee:d.comm)}/${d.unit}</div></div></div>
+      ${editing?'':`<div class="row center" style="gap:10px"><span class="b">${money(s.price)}</span><button data-act="editprice" data-x="${s.id}" style="color:var(--teal)">${I.edit}</button></div>`}
+    </div>
+    ${editing?`<div class="row center mt12" style="gap:10px">
+      <div class="field grow" style="margin:0"><label>Price per ${d.unit} (₹)</label><input id="ep-${s.id}" type="number" inputmode="numeric" value="${s.price}"></div>
+      <button class="btn sm" data-act="saveprice" data-x="${s.id}" style="align-self:flex-end">${I.check} Save</button>
+      <button class="btn ghost sm" data-act="cancelprice" style="align-self:flex-end">Cancel</button></div>`:''}
+    </div>`;
+  }).join('');
+  const more = S.services.filter(d=>!me.services.find(s=>s.id===d.id)).map(d=>
+    `<button class="card" style="width:calc(100% - 36px);text-align:left;display:block" data-act="addsvc" data-x="${d.id}">
+      <div class="row between center"><div class="row center" style="gap:12px"><div class="avatar" style="background:#EEF2F2;color:var(--ink-soft)">${I[d.icon]}</div>
+      <div><div class="b">${d.name}</div><div class="muted" style="font-size:12px">Suggested ${money(d.price)}/${d.unit}</div></div></div>
+      <span class="pill teal">${I.plus}Add</span></div></button>`).join('');
+  return `<div class="appbar"><div class="ml-logo" style="font-size:17px">My menu</div><div class="hi">What you offer & your prices</div></div>
+    <div class="sec-pad"><div class="kicker">Active services</div></div>${rows}
+    ${more?`<div class="sec-pad mt8"><div class="kicker">From the MeriLaundry catalogue</div></div>${more}`:''}
+    <div style="height:18px"></div>`;
+}
+
+function spCustomers(){
+  const list = S.customers.filter(c=>c.providers.includes('sp1'));
+  const rows=list.map(c=>{const cnt=S.orders.filter(o=>o.custId===c.id&&o.spId==='sp1').length;
+    return `<div class="card"><div class="row between center">
+      <div class="row center" style="gap:12px"><div class="avatar" style="background:${PERSONAS.customer.color}">${initials(c.name)}</div>
+      <div><div class="b">${c.name}</div><div class="muted" style="font-size:12.5px">${c.phone} · ${cnt} orders</div></div></div>
+      <span class="pill green">${I.link}Linked</span></div></div>`;}).join('');
+  return `<div class="appbar"><div class="ml-logo" style="font-size:17px">My customers</div><div class="hi">${list.length} customers linked to you</div></div>
+    <div class="card flush" style="background:var(--teal-tint);margin:14px 18px;padding:14px;color:var(--teal-deep);font-size:13px">${I.shield} Linked customers stay with you. They can only move to another shop after platform approval.</div>
+    ${rows}
+    <div style="margin:6px 18px 24px"><button class="btn" data-act="go" data-v="sp-addcust">${I.plus} Add a customer</button></div>`;
+}
+function spAddCust(){
+  return `${spHeader('Add customer','sp-customers')}
+    <div class="card" style="margin-top:-22px;position:relative;z-index:2">
+      <div class="field"><label>Customer name</label><input id="nc-name" placeholder="e.g. Sunita Patil"></div>
+      <div class="field"><label>Mobile number</label><input id="nc-phone" placeholder="90000 00xxx" inputmode="numeric"></div>
+      <div class="field"><label>Address (optional)</label><input id="nc-addr" placeholder="Flat / society / area"></div>
+      <div class="card flush mt16" style="background:var(--marigold-tint);padding:13px;font-size:13px;color:var(--marigold-deep)">${I.phone} We'll text them the MeriLaundry app link. They log in with an OTP and see you straight away.</div>
+      <button class="btn mt16" data-act="savecust">${I.check} Add & send invite</button>
+    </div>`;
+}
+
+function spTeam(){
+  const list=S.coworkers.filter(c=>c.spId==='sp1'); const me=sp('sp1');
+  const rows=list.map(c=>`<div class="card"><div class="row between center">
+    <div class="row center" style="gap:12px">${av(c.name,PERSONAS.coworker.color,c.photo)}
+    <div><div class="b">${c.name}</div><div class="muted" style="font-size:12.5px">${c.phone} · can pick, process & deliver</div></div></div>
+    <button data-act="rmcw" data-x="${c.id}" style="color:var(--red)">${I.logout}</button></div></div>`).join('');
+  return `<div class="appbar"><div class="ml-logo" style="font-size:17px">My team</div><div class="hi">Everyone does everything — you're the only one who can add staff</div></div>
+    <div class="card"><div class="row center" style="gap:12px">${av(me.owner,me.color,me.ownerPhoto)}
+      <div><div class="b">${me.owner}</div><div class="muted" style="font-size:12.5px">Owner · ${me.phone}</div></div>
+      <span class="pill ind" style="margin-left:auto">You</span></div></div>
+    ${rows||`<div class="empty"><div class="ic">${I.users}</div><div class="b">No staff yet</div></div>`}
+    <div style="margin:6px 18px 24px"><button class="btn" data-act="go" data-v="sp-addcw">${I.plus} Add staff member</button></div>`;
+}
+function spAddCw(){
+  return `${spHeader('Add staff member','sp-team')}
+    <div class="card" style="margin-top:-22px;position:relative;z-index:2">
+      <div class="tac" style="margin-bottom:4px">
+        <label class="photo-tile" style="width:84px;height:84px;margin:0 auto;cursor:pointer;${S.cwPhoto?`background-image:url('${S.cwPhoto}');background-size:cover`:''}">
+          <input type="file" accept="image/*" data-tgt="cw" onchange="pickPhoto(this)" style="display:none">
+          ${S.cwPhoto?'':I.camera}
+        </label>
+        <div class="muted" style="font-size:12px;margin-top:8px">${S.cwPhoto?'Tap to change photo':'Add a photo of the person'}</div>
+      </div>
+      <div class="field"><label>Name</label><input id="cw-name" placeholder="e.g. Ravi Kumar"></div>
+      <div class="field"><label>Mobile number</label><input id="cw-phone" placeholder="90000 00xxx" inputmode="numeric"></div>
+      <div class="card flush mt16" style="background:#EEF2F2;padding:13px;font-size:13px;color:var(--ink-soft)">${I.info} Staff can pick up, count, process and deliver — same as you. They stay tied to your shop; remove them and they lose app access.</div>
+      <button class="btn mt16" data-act="savecw">${I.check} Add staff member</button>
+    </div>`;
+}
+
+function spMoney(){
+  const mine=S.orders.filter(o=>o.spId==='sp1');
+  const paid=mine.filter(o=>o.paid);
+  const business=paid.reduce((s,o)=>s+orderTotal(o),0);
+  const commTotal=paid.reduce((s,o)=>s+orderComm(o),0);
+  const inappSettled=paid.filter(o=>o.payMethod==='inapp').reduce((s,o)=>s+orderComm(o),0);
+  const cashDue=paid.filter(o=>o.payMethod!=='inapp').reduce((s,o)=>s+orderComm(o),0);
+  const rows=paid.map(o=>`<div class="row between" style="padding:10px 0;border-bottom:1px solid var(--line)">
+    <div><div class="sb" style="font-size:13.5px">${o.id} · ${cust(o.custId).name}</div>
+      <div class="muted" style="font-size:12px">${o.payMethod==='inapp'?'Paid in app · commission auto-settled':o.payMethod==='upi'?'UPI direct · commission billed to you':'Cash / direct · commission billed to you'}</div></div>
+    <div class="tar"><div class="b">${money(orderTotal(o))}</div><div class="muted" style="font-size:11.5px">fee ${money(orderComm(o))}</div></div></div>`).join('');
+  return `<div class="appbar"><div class="ml-logo" style="font-size:17px">Earnings</div><div class="hi">Your money & the platform fee</div></div>
+    <div class="row" style="margin:14px 18px 0;gap:12px">
+      <div class="tile grow"><div class="muted" style="font-size:12px">Business done</div><div class="b" style="font-size:21px;font-family:var(--disp)">${money(business)}</div></div>
+      <div class="tile grow"><div class="muted" style="font-size:12px">Your earning</div><div class="b" style="font-size:21px;font-family:var(--disp);color:var(--green)">${money(business-commTotal)}</div></div>
+    </div>
+    <div class="card" style="background:var(--marigold-tint)">
+      <div class="row between center"><div><div class="b" style="color:var(--marigold-deep)">Platform fee due</div>
+      <div class="muted" style="font-size:12.5px">From cash / direct orders</div></div>
+      <div class="b" style="font-size:24px;font-family:var(--disp);color:var(--marigold-deep)">${money(cashDue)}</div></div>
+      ${cashDue>0?`<button class="btn gold mt12" data-act="toast" data-m="Pay ₹fee via UPI (demo)">${I.rupee} Settle now</button>`:''}
+      <div class="muted mt8" style="font-size:12px">${I.checkc.replace('width="24"','')} ${money(inappSettled)} already auto-settled from in-app payments.</div>
+    </div>
+    <div class="sec-pad"><div class="kicker">Recent orders</div></div>
+    <div class="card">${rows}</div><div style="height:18px"></div>`;
+}
+
+function spShop(){
+  const me=sp('sp1');
+  return `<div class="appbar"><div class="ml-logo" style="font-size:17px">My shop</div><div class="hi">${me.shop}</div></div>
+    <div class="card"><div class="row center" style="gap:13px">
+      <div class="avatar" style="background:${me.color};width:54px;height:54px;font-size:18px">${initials(me.shop)}</div>
+      <div><div class="b" style="font-size:17px">${me.shop}</div><div class="muted" style="font-size:13px">${me.owner} · owner</div>
+      <div class="pill green mt8">${I.star}${me.rating} · since ${me.since}</div></div></div>
+      <div class="divider"></div>
+      <div class="row center" style="gap:13px">
+        <label class="photo-tile" style="width:48px;height:48px;cursor:pointer;${me.ownerPhoto?`background-image:url('${me.ownerPhoto}');background-size:cover;border-style:solid`:''}">
+          <input type="file" accept="image/*" data-tgt="owner" data-id="sp1" onchange="pickPhoto(this)" style="display:none">${me.ownerPhoto?'':I.camera}</label>
+        <div><div class="sb" style="font-size:13.5px">Owner photo</div><div class="muted" style="font-size:12.5px">${me.ownerPhoto?'Tap to change':'Tap to upload your photo'}</div></div>
+      </div></div></div>
+    <div class="card">
+      <div class="row between center" style="padding:6px 0"><div class="row center" style="gap:10px;color:var(--ink-soft)">${I.clock}<span class="sb">Working hours</span></div><span class="b">${me.hours}</span></div>
+      <div class="divider"></div>
+      <div class="row between center" style="padding:6px 0"><div class="row center" style="gap:10px;color:var(--ink-soft)">${I.phone}<span class="sb">Contact</span></div><span class="b">${me.phone}</span></div>
+      <div class="divider"></div>
+      <div class="row between center" style="padding:6px 0"><div class="row center" style="gap:10px;color:var(--ink-soft)">${I.location}<span class="sb">GST</span></div><span class="b">${me.gst}</span></div>
+      <div class="divider"></div>
+      <div class="row between center" style="padding:6px 0"><div class="row center" style="gap:10px;color:var(--ink-soft)">${I.card}<span class="sb">Payout account</span></div><span class="b">${me.bank}</span></div>
+    </div>
+    <div class="card">
+      <div class="row between center"><div class="kicker">Direct payment (UPI)</div>${S.editUpi?'':`<button data-act="editupi" style="color:var(--teal)">${I.edit}</button>`}</div>
+      ${S.editUpi?`<div class="field"><label>Your UPI ID</label><input id="up-id" value="${me.upi||''}" placeholder="yourname@bank"></div>
+        <div class="row mt12" style="gap:10px"><button class="btn sm" data-act="saveupi">${I.check} Save</button><button class="btn ghost sm" data-act="cancelupi">Cancel</button></div>`
+      :`<div class="row center mt8" style="gap:8px"><div class="pill teal">${I.card}${me.upi||'Not set'}</div></div>
+        <div class="tac mt16">${me.upi?qrCode(me.upi,170):''}</div>
+        <div class="muted tac" style="font-size:12px;margin-top:8px">Customers scan this to pay you directly. They upload a screenshot and you confirm.</div>
+        <button class="btn ghost sm mt16" data-act="toast" data-m="Upload your own QR image (demo)">${I.camera} Upload my own QR</button>`}
+    </div>
+    <div style="margin:6px 18px 24px"><button class="btn ghost" data-act="toast" data-m="Edit shop details (demo)">${I.edit} Edit details</button>
+    <button class="btn dark mt12" data-act="logout">${I.logout} Log out</button></div>`;
+}
+
+/* ============================================================
+   CUSTOMER APP
+============================================================ */
+function customerApp(){
+  const v=curView('cust-home'); let body, nav=true;
+  if(v==='cust-home') body=custHome();
+  else if(v==='cust-new') {body=custNew(); nav=false;}
+  else if(v==='cust-orders') body=custOrders();
+  else if(v==='cust-order') {body=custOrder(view._x); nav=false;}
+  else if(v==='cust-pay') {body=custPay(view._x); nav=false;}
+  else if(v==='cust-shops') body=custShops();
+  else if(v==='cust-addshop') {body=custAddShop(); nav=false;}
+  else if(v==='cust-me') body=custMe();
+  else body=custHome();
+  return `<div class="viewport">${body}</div>${nav?bottomNav('customer',v):''}`;
+}
+function custHome(){
+  const me=cust(S.session.id); const myShop=sp(me.providers[0]);
+  const active=S.orders.filter(o=>o.custId===me.id&&o.status!=='closed');
+  const fn=me.name.split(' ')[0];
+  if(!myShop){
+    return `<div class="appbar ml-mark"><div class="row between center"><div class="ml-logo"><span class="bub">${I.drop}</span>MeriLaundry</div>${I.bell}</div>
+      <div class="hi">Welcome, ${fn} 👋</div></div>
+      <div class="card" style="margin-top:-22px;position:relative;z-index:2;text-align:center">
+        <div class="avatar" style="background:var(--teal-tint);color:var(--teal);width:56px;height:56px;margin:4px auto 0">${I.bldg}</div>
+        <div class="b mt12" style="font-size:17px">Let's find your laundry</div>
+        <div class="muted" style="font-size:13.5px;margin-top:4px">You're not linked to a shop yet. Pick one and place your first order — that links you to them.</div>
+        <button class="btn gold lg mt16" data-act="go" data-v="cust-new">${I.plus} Choose a laundry & order</button>
+      </div>
+      <div class="empty"><div class="ic">${I.box}</div><div class="b">No orders yet</div><div class="muted">Your first order will appear here.</div></div>`;
+  }
+  const needApprove=active.filter(o=>o.status==='priced');
+  const approveCard = needApprove.length?`<div class="card pulse" style="border:1.5px solid var(--marigold)">
+    <div class="kicker" style="color:var(--marigold-deep)">Action needed</div>
+    <div class="b mt8">${myShop.shop} sent your price</div>
+    <div class="row between center mt8"><span class="muted">Order ${needApprove[0].id}</span><span class="b" style="font-size:20px">${money(orderTotal(needApprove[0]))}</span></div>
+    <button class="btn gold mt12" data-act="go" data-v="cust-order" data-x="${needApprove[0].id}">${I.tag} Review & approve</button></div>`:'';
+  return `<div class="appbar ml-mark"><div class="row between center"><div class="ml-logo"><span class="bub">${I.drop}</span>MeriLaundry</div>${I.bell}</div>
+    <div class="hi">Hi ${fn} 👋 Laundry day?</div></div>
+    <div class="card" style="margin-top:-22px;position:relative;z-index:2">
+      <div class="row between center"><div class="row center" style="gap:11px">
+        <div class="avatar" style="background:${myShop.color}">${initials(myShop.shop)}</div>
+        <div><div class="muted" style="font-size:11.5px">YOUR LAUNDRY</div><div class="b">${myShop.shop}</div>
+        <div class="pill green mt8">${I.star}${myShop.rating} · open now</div></div></div></div>
+      <button class="btn gold lg mt16" data-act="go" data-v="cust-new">${I.plus} New laundry order</button>
+    </div>
+    ${approveCard}
+    <div class="sec-pad row between center"><h2 class="scr">My orders</h2><button class="muted sb" data-act="go" data-v="cust-orders" style="font-size:13px">See all</button></div>
+    ${active.length?active.map(custOrderRow).join(''):`<div class="empty"><div class="ic">${I.box}</div><div class="b">No active orders</div><div class="muted">Tap "New laundry order" to start.</div></div>`}
+    <div style="height:14px"></div>`;
+}
+function custOrderRow(o){
+  const st=STATUS[o.status]; const total=orderTotal(o);
+  return `<div class="card" style="cursor:pointer" data-act="go" data-v="cust-order" data-x="${o.id}">
+    <div class="row between center"><div class="b">${o.id}</div><div class="pill ${st.c}">${I[st.i]}${o.status==='priced'?'Approve price':st.l}</div></div>
+    <div class="row between center mt8"><span class="muted" style="font-size:13px">${o.type==='pickup'?'Pickup & delivery':'Shop drop-off'} · ${o.slot}</span>${total?`<span class="b">${money(total)}</span>`:''}</div>
+  </div>`;
+}
+function custHeader(title,back='cust-home'){
+  return `<div class="appbar"><div class="row center" style="gap:12px;position:relative;z-index:1">
+    <button data-act="go" data-v="${back}" style="color:#fff">${I.back}</button>
+    <div class="ml-logo" style="font-size:17px">${title}</div></div></div>`;
+}
+function custNew(){
+  const me=cust(S.session.id);
+  if(!S.draftOrder) S.draftOrder={type:'pickup', slot:'Today, 5–7 PM'};
+  const d=S.draftOrder;
+  if(!d.spId && me.providers.length) d.spId=me.providers[0];
+  const shop = d.spId?sp(d.spId):null;
+  const untied = me.providers.length===0;
+
+  // Shop chooser (shown until a shop is picked)
+  const activeShops=S.providers.filter(p=>p.chore==='laundry'&&p.status==='active');
+  const chooser = (untied || me.providers.length>1) ? `<div class="card" style="margin-top:-22px;position:relative;z-index:2">
+      <div class="kicker">Choose your laundry</div>
+      ${untied?`<div class="muted" style="font-size:12.5px;margin:6px 0 4px">Your first order links you to this shop.</div>`:''}
+      ${activeShops.map(s=>`<button class="list-row" style="width:100%;text-align:left;background:none;border:none" data-act="pickshop" data-x="${s.id}">
+        <div class="avatar" style="background:${s.color}">${initials(s.shop)}</div>
+        <div class="grow"><div class="sb">${s.shop}</div><div class="muted" style="font-size:12px">${s.owner} · ${s.rating||'new'}★</div></div>
+        ${d.spId===s.id?`<span class="pill green">${I.check}Selected</span>`:`<span class="pill grey">Choose</span>`}</button>`).join('')}
+    </div>` : '';
+
+  if(!shop){
+    return `${custHeader('New order')}${chooser}
+      <div class="empty"><div class="ic">${I.bldg}</div><div class="b">Pick a laundry above</div><div class="muted">Then choose pickup or drop-off and you're set.</div></div>`;
+  }
+
+  if(!d.items || d._itemsFor!==d.spId){ d.items = shop.services.map(s=>({sid:s.id,name:svc(s.id).name,qty:0,price:s.price})); d._itemsFor=d.spId; }
+  const total=d.items.reduce((s,l)=>s+l.qty*l.price,0);
+  const itemLines=d.items.map((l,idx)=>{const sd=svc(l.sid);
+    return `<div class="row between center" style="padding:11px 0;border-bottom:1px solid var(--line)">
+      <div class="row center" style="gap:11px"><div class="avatar" style="background:var(--teal-tint);color:var(--teal-deep);width:36px;height:36px">${I[sd.icon]}</div>
+        <div><div class="sb" style="font-size:14px">${l.name}</div><div class="muted" style="font-size:12px">${money(l.price)} / ${sd.unit}</div></div></div>
+      <div class="qty"><button data-act="cqty" data-i="${idx}" data-d="-1">−</button>
+        <span class="b" style="min-width:22px;text-align:center">${l.qty}</span>
+        <button data-act="cqty" data-i="${idx}" data-d="1">+</button></div>
+    </div>`;}).join('');
+  return `${custHeader('New order')}${chooser}
+    <div class="card" ${chooser?'':'style="margin-top:-22px;position:relative;z-index:2"'}>
+      ${untied?`<div class="pill teal" style="margin-bottom:10px">${I.bldg}${shop.shop}</div>`:''}
+      <div class="kicker">How should it work?</div>
+      <div class="seg mt8">
+        <button class="${d.type==='pickup'?'on':''}" data-act="dtype" data-t="pickup">${I.truck} Pickup & deliver</button>
+        <button class="${d.type==='dropoff'?'on':''}" data-act="dtype" data-t="dropoff">${I.bldg} I'll drop off</button>
+      </div>
+      ${d.type==='pickup'?`
+      <div class="field"><label>Pickup address</label><input id="d-addr" value="${me.address}"></div>
+      <div class="field"><label>Pickup time</label><select id="d-slot">
+        <option>Today, 5–7 PM</option><option>Today, 7–9 PM</option><option>Tomorrow, 9–11 AM</option></select></div>`:`
+      <div class="card flush mt12" style="background:var(--teal-tint);color:var(--teal-deep);padding:14px;font-size:13px">${I.bldg} Bring your clothes to ${shop.shop}. They'll re-check the count when you arrive.</div>`}
+    </div>
+    <div class="card">
+      <div class="row between center"><div class="kicker">What are you sending?</div><span class="pill grey">optional</span></div>
+      <div class="mt8">${itemLines}</div>
+      ${total?`<div class="row between center mt12"><span class="sb">Estimated total</span><span class="b" style="font-size:18px">${money(total)}</span></div>
+      <div class="muted" style="font-size:12px;margin-top:4px">${shop.shop} confirms the final count & price before any work starts.</div>`
+      :`<div class="muted" style="font-size:12.5px;margin-top:6px">Add what you're sending, or leave it blank — the shop can count & price it for you.</div>`}
+    </div>
+    <div style="margin:0 18px 24px"><button class="btn gold lg" data-act="placeorder">${I.check} ${total?'Place order · '+money(total)+' est.':'Place order'}</button></div>`;
+}
+function custOrder(id){
+  const o=ord(id); const shop=sp(o.spId); const st=STATUS[o.status];
+  const total=orderTotal(o);
+  const flow=flowOf(o); const curIdx=flow.indexOf(o.status);
+  const tl=flow.map((s,i)=>{const st2=STATUS[s];const isDone=i<curIdx,isNow=i===curIdx;const te=o.t.find(x=>x[0]===s);
+    return `<li class="${isDone?'done':isNow?'now':'pending'}"><span class="nod">${I[isDone||isNow?'check':st2.i]}</span>
+    <div><div class="t-main">${custStatusLabel(s,o)}</div>${te?`<div class="t-sub">${ts(te[1])}</div>`:''}</div></li>`;}).join('');
+  const items=o.items.length?o.items.map(i=>`<div class="row between" style="padding:8px 0;border-bottom:1px solid var(--line)">
+    <div class="sb" style="font-size:13.5px">${i.name} <span class="muted">× ${i.qty}</span>${i.photos?` ${I.camera.replace('width="24" height="24"','width="13" height="13"')}`:''}</div>
+    <div class="b">${money(i.qty*i.price)}</div></div>`).join(''):'';
+
+  let action='';
+  if(o.status==='priced') action=`<div style="margin:0 18px"><button class="btn gold lg" data-act="approve" data-x="${o.id}">${I.check} Approve this price</button>
+    <button class="btn ghost mt12" data-act="toast" data-m="Ask shop a question (demo)">Ask a question</button></div>`;
+  else if(o.status==='delivered'&&!o.paid&&o.paySubmitted) action=`<div style="margin:0 18px"><div class="card flush" style="background:var(--marigold-tint);text-align:center;padding:15px;color:var(--marigold-deep)">${I.clock}
+    <div class="b mt8">Payment sent · ${money(total)}</div><div style="font-size:13px;margin-top:3px">Waiting for ${shop.shop} to confirm they received it.</div></div></div>`;
+  else if(o.status==='delivered'&&!o.paid) action=`<div style="margin:0 18px"><div class="card flush" style="background:var(--green-tint);text-align:center;padding:14px;color:var(--green)">${I.box}<div class="b mt8">Delivered! Time to pay ${money(total)}</div></div>
+    <button class="btn green lg mt12" data-act="custpay" data-x="${o.id}" data-m="inapp">${I.card} Pay in app</button>
+    <button class="btn gold mt12" data-act="go" data-v="cust-pay" data-x="${o.id}">${I.rupee} Pay by UPI / scan QR</button>
+    <button class="btn ghost mt12" data-act="custcash" data-x="${o.id}">${I.cash} I'll pay cash on the spot</button></div>`;
+
+  return `${custHeader('Order '+o.id, 'cust-home')}
+    <div class="card" style="margin-top:-22px;position:relative;z-index:2">
+      <div class="row between center" style="gap:10px">
+        <div class="row center" style="gap:11px;min-width:0;flex:1">
+          <div class="avatar" style="background:${shop.color}">${initials(shop.shop)}</div>
+          <div style="min-width:0"><div class="b" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${shop.shop}</div>
+          <div class="muted" style="font-size:12.5px">${o.type==='pickup'?'Pickup & delivery':'Drop-off'}</div></div></div>
+        <div class="pill ${st.c}" style="flex-shrink:0">${I[st.i]}${custStatusLabel(o.status,o)}</div></div>
+    </div>
+    ${total?`<div class="card"><div class="row between center"><div class="kicker">Items</div><span class="b">${money(total)}</span></div><div class="mt8">${items}</div></div>`:''}
+    <div class="card"><div class="kicker">Live tracking</div><ul class="tl mt12">${tl}</ul></div>
+    ${action}<div style="height:24px"></div>`;
+}
+function custStatusLabel(s,o){
+  const map={placed:'Order placed',confirmed:'Shop confirmed',picked_up:'Picked up from you',priced:'Price sent — approve it',
+    approved:'You approved',in_progress:'Being cleaned',ready:'Ready',out_for_delivery:'On the way to you',
+    delivered:'Delivered',paid:'Paid',closed:'Completed'};
+  return map[s]||STATUS[s].l;
+}
+function custPay(id){
+  const o=ord(id); const shop=sp(o.spId); const total=orderTotal(o);
+  return `${custHeader('Pay '+shop.shop,'cust-order')}
+    <div class="card" style="margin-top:-22px;position:relative;z-index:2;text-align:center">
+      <div class="muted" style="font-size:12.5px">AMOUNT TO PAY</div>
+      <div class="b" style="font-size:30px;font-family:var(--disp)">${money(total)}</div>
+      <div style="display:flex;justify-content:center;margin:14px 0">${qrCode(shop.upi,180)}</div>
+      <div class="pill teal" style="margin:0 auto">${I.card}${shop.upi}</div>
+      <div class="muted" style="font-size:12.5px;margin-top:10px">Scan with any UPI app (GPay, PhonePe, Paytm) and pay ${shop.shop} directly.</div>
+    </div>
+    <div class="card" style="background:var(--marigold-tint);color:var(--marigold-deep);font-size:13px">${I.info} After paying, upload the screenshot. The shop confirms it and your order is done.</div>
+    <div style="margin:0 18px 24px">
+      <button class="btn gold lg" data-act="custpayproof" data-x="${o.id}">${I.camera} I've paid · upload screenshot</button>
+      <button class="btn ghost mt12" data-act="custcash" data-x="${o.id}">${I.cash} Pay cash instead</button>
+    </div>`;
+}
+function custOrders(){
+  const all=S.orders.filter(o=>o.custId===S.session.id).sort((a,b)=>b.t[b.t.length-1][1]-a.t[a.t.length-1][1]);
+  return `<div class="appbar"><div class="ml-logo" style="font-size:17px">My orders</div><div class="hi">${all.length} orders</div></div>
+    ${all.length?all.map(custOrderRow).join(''):`<div class="empty"><div class="ic">${I.box}</div><div class="b">No orders yet</div></div>`}<div style="height:18px"></div>`;
+}
+function custShops(){
+  const me=cust(S.session.id);
+  if(!me.providers.length){
+    return `<div class="appbar"><div class="ml-logo" style="font-size:17px">My shops</div><div class="hi">Where you send your laundry</div></div>
+      <div class="empty"><div class="ic">${I.bldg}</div><div class="b">No laundry linked yet</div><div class="muted">Place your first order to get linked to a shop.</div></div>
+      <div style="margin:6px 18px 24px"><button class="btn gold" data-act="go" data-v="cust-new">${I.plus} Choose a laundry & order</button></div>`;
+  }
+  const mine=me.providers.map(id=>{const s=sp(id);
+    return `<div class="card"><div class="row between center"><div class="row center" style="gap:12px">
+      <div class="avatar" style="background:${s.color}">${initials(s.shop)}</div>
+      <div><div class="b">${s.shop}</div><div class="pill green mt8">${I.star}${s.rating} · linked</div></div></div></div></div>`;}).join('');
+  const pendingReq=S.linkRequests.find(r=>r.custId===me.id&&r.status==='pending');
+  return `<div class="appbar"><div class="ml-logo" style="font-size:17px">My shops</div><div class="hi">Where you send your laundry</div></div>
+    ${mine}
+    ${pendingReq?`<div class="card flush" style="margin:14px 18px;background:var(--marigold-tint);color:var(--marigold-deep);padding:14px">${I.clock} Your request to add ${sp(pendingReq.spId).shop} is waiting for approval.</div>`:''}
+    <div style="margin:6px 18px 24px"><button class="btn ghost" data-act="go" data-v="cust-addshop">${I.plus} Add another shop</button></div>`;
+}
+function custAddShop(){
+  const others=S.providers.filter(p=>p.chore==='laundry'&&p.status==='active'&&!cust(S.session.id).providers.includes(p.id));
+  const rows=others.map(s=>`<div class="card"><div class="row between center"><div class="row center" style="gap:12px">
+    <div class="avatar" style="background:${s.color}">${initials(s.shop)}</div>
+    <div><div class="b">${s.shop}</div><div class="muted" style="font-size:12.5px">${s.owner} · ${s.rating}★</div></div></div>
+    <button class="btn sm" data-act="reqshop" data-x="${s.id}">${I.plus} Request</button></div></div>`).join('');
+  return `${custHeader('Add a shop','cust-shops')}
+    <div class="card flush" style="margin:14px 18px;background:var(--teal-tint);color:var(--teal-deep);padding:14px;font-size:13px">${I.shield} Adding a new shop needs a quick approval from the platform — this keeps things fair for your current shop.</div>
+    ${rows||`<div class="empty"><div class="ic">${I.bldg}</div><div class="b">No other shops nearby</div></div>`}`;
+}
+function custMe(){
+  const me=cust(S.session.id); const col=PERSONAS[S.session.persona].color;
+  return `<div class="appbar"><div class="ml-logo" style="font-size:17px">My profile</div></div>
+    <div class="card"><div class="row center" style="gap:13px"><div class="avatar" style="background:${col};width:54px;height:54px;font-size:18px">${initials(me.name)}</div>
+      <div><div class="b" style="font-size:17px">${me.name}</div><div class="muted">${me.phone}</div></div></div></div>
+    <div class="card"><div class="list-row">${I.location}<div class="grow"><div class="sb" style="font-size:13.5px">Address</div><div class="muted" style="font-size:13px">${me.address}</div></div></div>
+      <div class="list-row">${I.card}<div class="grow"><div class="sb" style="font-size:13.5px">Saved payment</div><div class="muted" style="font-size:13px">UPI · ****@okhdfc</div></div></div></div>
+    <div style="margin:6px 18px 24px"><button class="btn dark" data-act="logout">${I.logout} Log out</button></div>`;
+}
+
+/* ============================================================
+   COWORKER APP
+============================================================ */
+function coworkerApp(){
+  const v=curView('cw-tasks');
+  if(v==='cw-task') return `<div class="viewport">${cwTask(view._x)}</div>`;
+  if(v==='cw-items') return `<div class="viewport">${editItems(view._x)}</div>`;
+  const me=cw('cw1');
+  const tasks=S.orders.filter(o=>o.spId==='sp1'&&o.assignedCw==='cw1'&&(
+    (o.status==='confirmed'&&o.type==='pickup') ||
+    o.status==='out_for_delivery' ||
+    (o.status==='delivered'&&o.paySubmitted&&!o.paid)
+  ));
+  const meta=o=>o.status==='confirmed'?{m:'pickup',l:'PICK UP',c:'gold',i:'box'}
+    :o.status==='out_for_delivery'?{m:'deliver',l:'DELIVER',c:'teal',i:'truck'}
+    :{m:'confirmpay',l:'CONFIRM '+money(orderTotal(o)),c:'green',i:'rupee'};
+  const rows=tasks.map(o=>{const c=cust(o.custId);const t=meta(o);
+    return `<div class="card" style="cursor:pointer" data-act="go" data-v="cw-task" data-x="${o.id}">
+      <div class="row between center"><div class="pill ${t.c}">${I[t.i]}${t.l}</div><span class="muted" style="font-size:12px">${o.slot}</span></div>
+      <div class="b mt12" style="font-size:15px">${c.name}</div>
+      <div class="row center mt8" style="gap:8px;color:var(--ink-soft);font-size:13px">${I.location}<span>${o.address}</span></div></div>`;}).join('');
+  return `<div class="viewport"><div class="appbar" style="background:${PERSONAS.coworker.color}">
+      <div class="ml-logo" style="font-size:17px"><span class="bub" style="background:rgba(255,255,255,.25)">${I.truck}</span>My tasks</div>
+      <div class="hi">Hi ${cw('cw1').name} · ${sp('sp1').shop}</div></div>
+    <div class="sec-pad"><div class="kicker" style="color:${PERSONAS.coworker.color}">Today · ${tasks.length} stops</div></div>
+    ${rows||`<div class="empty"><div class="ic" style="background:#FDF1DC"><span style="color:var(--marigold)">${I.checkc}</span></div><div class="b">No tasks right now</div><div class="muted">New jobs assigned to you will appear here.</div></div>`}
+    <div style="height:20px"></div></div>`;
+}
+function cwTask(id){
+  const o=ord(id);const c=cust(o.custId);
+  const mode=o.status==='confirmed'?'pickup':o.status==='out_for_delivery'?'deliver':'confirmpay';
+  const titles={pickup:'Pickup',deliver:'Delivery',confirmpay:'Confirm payment'};
+  let action;
+  if(mode==='confirmpay'){
+    action=`<div class="card"><div class="row between center"><div class="kicker" style="color:${PERSONAS.coworker.color}">Amount</div><span class="b" style="font-size:20px">${money(orderTotal(o))}</span></div>
+      <div class="muted mt8" style="font-size:13px">${o.payMethod==='upi'?'Customer paid by UPI and attached a screenshot. Check the shop UPI app, then confirm.':'Customer to pay cash. Collect it, then confirm.'}</div>
+      ${o.payMethod==='upi'?`<button class="btn ghost sm mt12" data-act="toast" data-m="Opening screenshot (demo)">${I.camera} View screenshot</button>`:''}</div>
+      <div style="margin:0 18px"><button class="btn green lg" data-act="confirmpay" data-x="${o.id}">${I.check} Confirm payment received</button></div>`;
+  } else {
+    const itemCount=o.items.reduce((s,i)=>s+i.qty,0);
+    action=`<div class="card"><div class="row" style="gap:11px;align-items:flex-start;color:var(--ink-soft)">${I.location}
+        <div><div class="b" style="color:var(--ink)">${o.address}</div><div class="muted" style="font-size:13px">${o.slot}</div></div></div>
+        <button class="btn mt16" style="background:${PERSONAS.coworker.color};box-shadow:none" data-act="toast" data-m="Opening maps (demo)">${I.map} Navigate</button></div>
+      ${mode==='pickup'?`<div class="card"><div class="row between center"><div class="kicker" style="color:${PERSONAS.coworker.color}">Items</div><span class="muted" style="font-size:13px">${itemCount?itemCount+' counted':'none yet'}</span></div>
+        <button class="btn ghost mt12" data-act="go" data-v="cw-items" data-x="${o.id}">${I.tag} Add / edit items</button></div>`:''}
+      <div style="margin:0 18px"><button class="btn green lg" data-act="${mode==='pickup'?'cwpick':'cwdeliver'}" data-x="${o.id}">${I.check} ${mode==='pickup'?'Mark picked up':'Mark delivered'}</button></div>`;
+  }
+  return `<div class="appbar" style="background:${PERSONAS.coworker.color}"><div class="row center" style="gap:12px;position:relative;z-index:1">
+      <button data-act="go" data-v="cw-tasks" style="color:#fff">${I.back}</button><div class="ml-logo" style="font-size:17px">${titles[mode]}</div></div></div>
+    <div class="card" style="margin-top:-22px;position:relative;z-index:2">
+      <div class="row center" style="gap:12px"><div class="avatar" style="background:${PERSONAS.coworker.color};width:50px;height:50px">${initials(c.name)}</div>
+        <div><div class="b" style="font-size:17px">${c.name}</div><div class="muted">${o.id}</div></div></div>
+      <a class="btn ghost mt16" href="tel:" onclick="return false">${I.phone} Call customer</a>
+    </div>
+    ${action}`;
+}
+
+/* ============================================================
+   SUPERADMIN (desktop)
+============================================================ */
+function saRouter(v){
+  if(v==='sa-chores')   return [saChores(),'Chores & services','Each chore is a branded vertical on one platform'];
+  if(v.startsWith('sa-chore')) return [saChoreDetail(view._x),'MeriLaundry services','Master catalogue & platform commission'];
+  if(v==='sa-providers')return [saProviders(),'Service providers','Every laundry across the platform'];
+  if(v==='sa-pms')      return [saPMs(),'Partner managers','Your team that onboards & manages laundries'];
+  if(v==='sa-payouts')  return [saPayouts(),'Payouts','Release earnings to providers'];
+  if(v==='sa-settings') return [saSettings(),'Features','Turn platform features on or off'];
+  return [saDash(),'Dashboard','Welcome back — here\'s your platform today'];
+}
+function saDash(){
+  const providers=S.providers.length, active=S.providers.filter(p=>p.status==='active').length;
+  const gmv=S.orders.filter(o=>o.paid).reduce((s,o)=>s+orderTotal(o),0);
+  const comm=S.orders.filter(o=>o.paid).reduce((s,o)=>s+orderComm(o),0);
+  const pendingOnb=S.providers.filter(p=>p.status==='pending').length;
+  const k=(lab,num,ic)=>`<div class="kpi"><div class="lab">${I[ic]}${lab}</div><div class="num">${num}</div></div>`;
+  return `<div class="kpis">
+    ${k('Active chores','1<small> / 3</small>','grid')}${k('Service providers',active+'<small> / '+providers+'</small>','bldg')}
+    ${k('GMV (paid)',money(gmv),'rupee')}${k('Commission earned',money(comm),'wallet')}</div>
+    <div class="row mt24" style="gap:20px;align-items:flex-start">
+      <div class="dcard grow"><div class="row between center"><b>Chores</b><button class="btn ind sm" data-act="go" data-v="sa-chores">Manage</button></div>
+        ${S.chores.map(ch=>`<div class="row between center" style="padding:12px 0;border-bottom:1px solid #F0F2F6">
+          <div class="row center" style="gap:11px"><div class="avatar" style="background:${ch.status==='active'?'var(--teal)':'#C5CBD3'};width:36px;height:36px">${I.drop}</div>
+          <div><div class="b">${ch.brand}</div><div class="muted" style="font-size:12.5px">${ch.tagline}</div></div></div>
+          <span class="pill ${ch.status==='active'?'green':'grey'}">${ch.status==='active'?'Live':'Coming soon'}</span></div>`).join('')}
+      </div>
+      <div class="dcard" style="width:300px">${pendingOnb?`<div class="row center" style="gap:10px"><div class="avatar" style="background:var(--marigold);width:36px;height:36px">${I.inbox}</div>
+        <div><div class="b">${pendingOnb} provider awaiting onboarding</div><div class="muted" style="font-size:12.5px">Assigned to a partner manager</div></div></div>
+        <button class="btn ind mt16" data-act="enter" data-role="pm">Open as Partner Manager</button>`:'All providers onboarded'}</div>
+    </div>`;
+}
+function saChores(){
+  const cards=S.chores.map(ch=>`<div class="dcard" style="position:relative">
+    <span class="pill ${ch.status==='active'?'green':'grey'}" style="position:absolute;top:18px;right:18px">${ch.status==='active'?'Live':'Coming soon'}</span>
+    <div class="avatar" style="background:${ch.status==='active'?'var(--teal)':'#C5CBD3'};width:46px;height:46px">${I.drop}</div>
+    <div class="b mt12" style="font-size:17px;font-family:var(--disp)">${ch.brand}</div>
+    <div class="muted" style="font-size:13px">${ch.tagline}</div>
+    ${ch.id==='laundry'?`<button class="btn ind sm mt16" data-act="go" data-v="sa-chore" data-x="laundry">${I.list} Manage services</button>`:`<button class="btn ghost sm mt16" data-act="toast" data-m="Launch ${ch.brand} (demo)">${I.play} Launch chore</button>`}
+  </div>`).join('');
+  return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px">${cards}
+    <button class="dcard" style="border:2px dashed #C9D2DE;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--indigo);min-height:170px" data-act="toast" data-m="Create new chore (demo)">
+      <div class="avatar" style="background:var(--indigo-tint);color:var(--indigo);width:46px;height:46px">${I.plus}</div><div class="b mt12">Create a new chore</div></button></div>`;
+}
+function saChoreDetail(){
+  const rows=S.services.map(s=>`<tr><td><div class="row center" style="gap:10px"><div class="avatar" style="background:var(--teal-tint);color:var(--teal-deep);width:34px;height:34px">${I[s.icon]}</div><b>${s.name}</b></div></td>
+    <td>per ${s.unit}</td><td>${money(s.price)}</td><td><span class="pill ind">${money(s.comm)} / ${s.unit}</span></td>
+    <td class="tar"><button style="color:var(--indigo)" data-act="toast" data-m="Edit ${s.name} (demo)">${I.edit}</button></td></tr>`).join('');
+  return `<div class="dcard"><div class="row between center" style="margin-bottom:16px"><div><b>Service catalogue</b><div class="muted" style="font-size:13px">Providers pick from these and set their own price. The suggested fee is the default — the partner manager sets the binding platform fee per provider at onboarding.</div></div>
+    <button class="btn ind sm" data-act="toast" data-m="Add service (demo)">${I.plus} Add service</button></div>
+    <div class="table-wrap"><table><thead><tr><th>Service</th><th>Unit</th><th>Suggested price</th><th>Suggested fee</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+function saProviders(){
+  const rows=S.providers.map(p=>`<tr><td><div class="row center" style="gap:10px"><div class="avatar" style="background:${p.color};width:34px;height:34px">${initials(p.shop)}</div>
+    <div><b>${p.shop}</b><div class="muted" style="font-size:12px">${p.owner} · ${p.phone}</div></div></div></td>
+    <td>${p.pmId?pm(p.pmId).name:'<span class="muted">Unassigned</span>'}</td>
+    <td><span class="pill ${p.status==='active'?'green':'gold'}">${p.status==='active'?'Active':'Pending onboarding'}</span></td>
+    <td class="tar">${p.status==='pending'&&!p.pmId?`<button class="btn ind sm" data-act="assignpm" data-x="${p.id}">Assign to PM</button>`:`<button style="color:var(--indigo)" data-act="toast" data-m="View ${p.shop} (demo)">${I.chev}</button>`}</td></tr>`).join('');
+  return `<div class="dcard"><div class="table-wrap"><table><thead><tr><th>Laundry</th><th>Partner manager</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+function saPMs(){
+  const rows=S.partnerMgrs.map(p=>{const cnt=S.providers.filter(x=>x.pmId===p.id).length;
+    return `<tr><td><div class="row center" style="gap:10px"><div class="avatar" style="background:var(--indigo);width:34px;height:34px">${initials(p.name)}</div><b>${p.name}</b></div></td>
+    <td>${p.phone}</td><td>${p.region}</td><td><span class="pill ind">${cnt} laundries</span></td></tr>`;}).join('');
+  return `<div class="dcard"><div class="row between center" style="margin-bottom:16px"><b>Partner managers</b>
+    <button class="btn ind sm" data-act="toast" data-m="Create partner manager (demo)">${I.plus} New partner manager</button></div>
+    <div class="table-wrap"><table><thead><tr><th>Name</th><th>Mobile</th><th>Region</th><th>Portfolio</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+function saPayouts(){
+  const byP=S.providers.filter(p=>p.status==='active').map(p=>{
+    const os=S.orders.filter(o=>o.spId===p.id&&o.payMethod==='inapp'&&o.paid);
+    const gross=os.reduce((s,o)=>s+orderTotal(o),0), fee=os.reduce((s,o)=>s+orderComm(o),0);
+    return {p,net:gross-fee,gross,fee,n:os.length};}).filter(x=>x.gross>0);
+  const total=byP.reduce((s,x)=>s+x.net,0);
+  const rows=byP.map(x=>`<tr><td><b>${x.p.shop}</b><div class="muted" style="font-size:12px">${x.p.bank||'—'}</div></td>
+    <td>${x.n} in-app orders</td><td>${money(x.gross)}</td><td>−${money(x.fee)}</td><td><b>${money(x.net)}</b></td>
+    <td class="tar"><button class="btn green sm" data-act="payout" data-x="${x.p.id}">${I.wallet} Release</button></td></tr>`).join('');
+  return `<div class="dcard" style="margin-bottom:18px;background:var(--indigo);color:#fff"><div class="row between center">
+    <div><div style="opacity:.85;font-size:13px">Pending payout to providers</div><div style="font-family:var(--disp);font-size:30px;font-weight:800">${money(total)}</div></div>
+    ${total>0?`<button class="btn sm" style="background:#fff;color:var(--indigo)" data-act="payoutall">Release all</button>`:''}</div></div>
+    <div class="dcard"><div class="table-wrap"><table><thead><tr><th>Provider</th><th>Source</th><th>Collected</th><th>Platform fee</th><th>Net payout</th><th></th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="6" class="muted" style="text-align:center;padding:24px">All settled 🎉</td></tr>'}</tbody></table></div></div>`;
+}
+function saSettings(){
+  const t=(key,title,desc)=>`<div class="row between center" style="padding:16px 0;border-bottom:1px solid #F0F2F6">
+    <div style="max-width:70%"><div class="b">${title}</div><div class="muted" style="font-size:13px">${desc}</div></div>
+    <button class="toggle ${S.settings[key]?'on':''}" data-act="flag" data-k="${key}"></button></div>`;
+  return `<div class="dcard"><b>Platform features</b><div class="muted" style="font-size:13px;margin-bottom:6px">Flip these on or off across the platform.</div>
+    ${t('approvalGate','New-shop approval gate','When ON, a customer adding a second laundry needs a partner manager to approve it. Protects each provider and their customers.')}
+    ${t('photoProof','Photo proof on items','Providers must add a photo when itemising an order.')}
+    ${t('inAppPay','In-app payments','Let customers pay through the app with auto split-settlement. If off, all payments are direct.')}
+    </div>`;
+}
+
+/* ============================================================
+   PARTNER MANAGER (desktop)
+============================================================ */
+function pmRouter(v){
+  if(v==='pm-onboard'||v.startsWith('pm-onboard:')) {
+    if(view._x) return [pmOnboardWizard(view._x),'Onboard provider','Set up the laundry to go live'];
+    return [pmQueue(),'Onboarding queue','New laundries waiting to be set up'];
+  }
+  if(v==='pm-requests') return [pmRequests(),'Approval requests','Customers asking to add a new shop'];
+  return [pmPortfolio(),'My laundries','Providers you manage'];
+}
+function pmPortfolio(){
+  const mine=S.providers.filter(p=>p.pmId==='pm1');
+  const cards=mine.map(p=>`<div class="dcard"><div class="row between center"><div class="row center" style="gap:11px">
+    <div class="avatar" style="background:${p.color};width:42px;height:42px">${initials(p.shop)}</div>
+    <div><div class="b">${p.shop}</div><div class="muted" style="font-size:12.5px">${p.owner} · ${p.phone}</div></div></div>
+    <span class="pill ${p.status==='active'?'green':'gold'}">${p.status==='active'?'Active':'Pending'}</span></div>
+    <div class="row mt16" style="gap:20px"><div><div class="muted" style="font-size:11.5px">SERVICES</div><div class="b">${p.services?p.services.length:0}</div></div>
+    <div><div class="muted" style="font-size:11.5px">RATING</div><div class="b">${p.rating||'—'}★</div></div>
+    <div><div class="muted" style="font-size:11.5px">HOURS</div><div class="b" style="font-size:13px">${p.hours||'—'}</div></div></div></div>`).join('');
+  return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px">${cards}</div>`;
+}
+function pmQueue(){
+  const q=S.providers.filter(p=>p.status==='pending'&&p.pmId==='pm1');
+  if(!q.length) return `<div class="dcard" style="text-align:center;padding:40px"><div class="avatar" style="background:var(--green-tint);color:var(--green);width:54px;height:54px;margin:0 auto">${I.checkc}</div>
+    <div class="b mt12">Queue is clear</div><div class="muted">No laundries waiting to be onboarded.</div>
+    <div class="muted" style="font-size:13px;margin-top:10px">Tip: as SuperAdmin, assign Bright Wash Studio to a partner manager first.</div></div>`;
+  return q.map(p=>`<div class="dcard" style="margin-bottom:16px"><div class="row between center">
+    <div class="row center" style="gap:12px"><div class="avatar" style="background:${p.color};width:46px;height:46px">${initials(p.shop)}</div>
+    <div><div class="b" style="font-size:16px">${p.shop}</div><div class="muted" style="font-size:13px">${p.owner} · ${p.phone} · self-registered</div></div></div>
+    <button class="btn ind sm" data-act="go" data-v="pm-onboard" data-x="${p.id}">${I.play} Start onboarding</button></div></div>`).join('');
+}
+function pmOnboardWizard(id){
+  const p=sp(id);
+  const svcChecks=S.services.map(s=>`<div class="card flush" style="padding:12px;border:1.5px solid var(--line);margin-bottom:8px">
+    <label style="display:flex;align-items:center;gap:11px;cursor:pointer">
+      <input type="checkbox" class="ob-svc" value="${s.id}" style="width:18px;height:18px;accent-color:var(--indigo)">
+      <div class="avatar" style="background:var(--teal-tint);color:var(--teal-deep);width:32px;height:32px">${I[s.icon]}</div>
+      <div class="grow"><div class="sb">${s.name}</div><div class="muted" style="font-size:12px">charged per ${s.unit} · suggested price ${money(s.price)}</div></div>
+    </label>
+    <div class="row center" style="gap:10px;margin-top:10px;padding-left:43px">
+      <span class="muted" style="font-size:12.5px;font-weight:600">Platform fee</span>
+      <div class="row center" style="gap:6px"><span class="muted">₹</span><input class="ob-fee" data-sid="${s.id}" type="number" step="0.05" min="0" value="${s.comm}" style="width:90px;padding:8px 10px;border:1.5px solid var(--line);border-radius:9px"></div>
+      <span class="muted" style="font-size:12.5px">per ${s.unit}</span>
+    </div></div>`).join('');
+  return `<div style="max-width:620px">
+    <div class="dcard" style="margin-bottom:16px"><div class="row center" style="gap:12px"><div class="avatar" style="background:${p.color};width:44px;height:44px">${initials(p.shop)}</div>
+      <div><div class="b" style="font-size:16px">${p.shop}</div><div class="muted">${p.owner} · ${p.phone}</div></div></div></div>
+    <div class="dcard" style="margin-bottom:16px"><b>1 · Services &amp; platform fee</b>
+      <div class="muted" style="font-size:13px;margin-bottom:12px">Tick what this laundry offers and set the fee they pay the platform per item. This is what's billed/settled on every order.</div>
+      ${svcChecks}</div>
+    <div class="dcard" style="margin-bottom:16px"><b>2 · Business details</b>
+      <div class="row" style="gap:24px;flex-wrap:wrap">
+        <div class="field"><label>Shop logo</label><div class="row" style="gap:10px"><div class="photo-tile" style="width:64px;height:64px">${I.camera}</div><div class="muted" style="align-self:center;font-size:13px">Upload (demo)</div></div></div>
+        <div class="field"><label>Owner photo</label><div class="row" style="gap:10px">
+          <label class="photo-tile" style="width:64px;height:64px;cursor:pointer;${sp(id).ownerPhoto?`background-image:url('${sp(id).ownerPhoto}');background-size:cover;border-style:solid`:''}">
+            <input type="file" accept="image/*" data-tgt="owner" data-id="${id}" onchange="pickPhoto(this)" style="display:none">${sp(id).ownerPhoto?'':I.camera}</label>
+          <div class="muted" style="align-self:center;font-size:13px">${sp(id).ownerPhoto?'Tap to change':'Upload photo'}</div></div></div>
+      </div>
+      <div class="row" style="gap:12px"><div class="field grow"><label>GST number</label><input id="ob-gst" placeholder="27ABCDE1234F1Z5"></div>
+      <div class="field grow"><label>Working hours</label><input id="ob-hours" placeholder="8 AM – 9 PM"></div></div>
+      <div class="field"><label>Bank account for payouts</label><input id="ob-bank" placeholder="Account / IFSC"></div>
+      <div class="field"><label>UPI ID for direct payments</label><input id="ob-upi" placeholder="shopname@bank"></div>
+    </div>
+    <button class="btn ind lg" data-act="activate" data-x="${id}">${I.checkc} Activate provider & go live</button></div>`;
+}
+function pmRequests(){
+  const reqs=S.linkRequests.filter(r=>r.status==='pending');
+  if(!S.settings.approvalGate) return `<div class="dcard" style="text-align:center;padding:36px"><div class="avatar" style="background:#EEF2F2;color:var(--ink-soft);width:50px;height:50px;margin:0 auto">${I.shield}</div>
+    <div class="b mt12">Approval gate is OFF</div><div class="muted">Customers can add any shop instantly. Turn it back on in SuperAdmin → Features.</div></div>`;
+  if(!reqs.length) return `<div class="dcard" style="text-align:center;padding:36px"><div class="avatar" style="background:var(--green-tint);color:var(--green);width:50px;height:50px;margin:0 auto">${I.checkc}</div><div class="b mt12">No pending requests</div></div>`;
+  return reqs.map(r=>{const c=cust(r.custId),s=sp(r.spId),cur=sp(c.providers[0]);
+    return `<div class="dcard" style="margin-bottom:16px"><div class="row between center">
+      <div class="row center" style="gap:12px"><div class="avatar" style="background:${PERSONAS.customer.color};width:44px;height:44px">${initials(c.name)}</div>
+      <div><div class="b">${c.name}</div><div class="muted" style="font-size:13px">wants to add <b style="color:var(--ink)">${s.shop}</b> · currently with ${cur.shop}</div></div></div>
+      <div class="row" style="gap:8px"><button class="btn ghost sm" data-act="rejreq" data-x="${r.id}">Decline</button>
+      <button class="btn ind sm" data-act="apprreq" data-x="${r.id}">${I.check} Approve</button></div></div></div>`;}).join('');
+}
+
+/* ============================================================
+   ACTIONS
+============================================================ */
+function advance(id,to){
+  const o=ord(id); o.status=to; o.t.push([to,Date.now()]);
+}
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]'); if(!el) return;
+  const a=el.dataset.act, x=el.dataset.x;
+  switch(a){
+    case 'enter': enter(el.dataset.role); break;
+    case 'switcher': backToSwitcher(); break;
+    case 'logout': { if(S.session.persona) delete S.authed[S.session.persona]; backToSwitcher(); } break;
+    case 'sendotp': { const ph=($('lg-phone')&&$('lg-phone').value.trim())||PERSONAS[S.session.persona].phone; S.session.loginPhone=ph; S.session.loginStep='otp'; toast('OTP sent — demo code 0000','phone'); render(); } break;
+    case 'loginback': S.session.loginStep='phone'; render(); break;
+    case 'otpfill': ['otp0','otp1','otp2','otp3'].forEach(id=>{const e=$(id); if(e)e.value='0';}); break;
+    case 'verifyotp': {
+      const code=['otp0','otp1','otp2','otp3'].map(id=>($(id)&&$(id).value||'')).join('');
+      if(code.length<4){ toast('Enter the 4-digit code','info'); break; }
+      if(code!=='0000'){ toast('Demo code is 0000','info'); break; }
+      S.authed[S.session.persona]=true; S.session.authed=true; S.session.loginStep=null;
+      view={}; toast('Welcome, '+PERSONAS[S.session.persona].name.split(/[ —]/)[0]+'!'); render(); } break;
+    case 'go': go(el.dataset.v, el.dataset.x); break;
+    case 'toast': toast(el.dataset.m||'Demo action'); break;
+
+    /* provider */
+    case 'confirm': advance(x,'confirmed'); toast('Order confirmed'); go('sp-order',x); break;
+    case 'reject': { const o=ord(x); o.status='closed'; o.t.push(['closed',Date.now()]); toast('Order declined'); go('sp-home'); } break;
+    case 'pickup': { advance(x,'picked_up'); toast('Marked picked up'); go('sp-order',x); } break;
+    case 'assignpick': { const o=ord(x); o.assignedCw=el.dataset.cw; toast(el.dataset.cw==='self'?"You'll pick this up":'Sent to '+cw(el.dataset.cw).name); go('sp-order',x); } break;
+    case 'reassign': { ord(x).assignedCw=null; render(); } break;
+    case 'confirmpay': { const o=ord(x); o.paid=true; advance(x,'paid'); advance(x,'closed');
+      toast(o.payMethod==='inapp'?'Confirmed':'Payment confirmed · fee added to dues');
+      go(S.session.role==='coworker'?'cw-tasks':'sp-order', x); } break;
+    case 'advance': advance(x,el.dataset.to); toast('Updated'); go(view[S.session.role].startsWith('sp')?'sp-order':'cw-tasks', x); break;
+    case 'qty': { const o=ord(x); const l=o.draft[+el.dataset.i]; l.qty=Math.max(0,l.qty+(+el.dataset.d)); render(); } break;
+    case 'addphoto': { const o=ord(x); o.draft[+el.dataset.i].photos++; toast('Photo added (demo)','camera'); render(); } break;
+    case 'saveitems': { const o=ord(x); o.items=o.draft.filter(l=>l.qty>0).map(l=>({sid:l.sid,name:l.name,qty:l.qty,price:l.price,photos:l.photos})); delete o.draft;
+      toast(o.items.length?'Items saved':'Items cleared');
+      go(S.session.role==='coworker'?'cw-task':'sp-order', x); } break;
+    case 'sendprice': { const o=ord(x); o.items=o.draft.filter(l=>l.qty>0).map(l=>({sid:l.sid,name:l.name,qty:l.qty,price:l.price,photos:l.photos})); delete o.draft;
+      if(o.walkin){ advance(x,'in_progress'); toast('Order created — work started'); }
+      else { advance(x,'priced'); toast('Price sent to customer'); }
+      go('sp-order',x); } break;
+    case 'pay': { const o=ord(x); o.payMethod=el.dataset.m; o.paid=true; advance(x,'paid'); toast(el.dataset.m==='inapp'?'Paid in app · fee auto-settled':'Marked cash · fee billed to you'); go('sp-order',x); } break;
+    case 'sntype': { if($('sn-cust')) S.spDraft.custId=$('sn-cust').value; S.spDraft.type=el.dataset.t; render(); } break;
+    case 'spnew': {
+      const custId=$('sn-cust')?$('sn-cust').value:(S.spDraft&&S.spDraft.custId);
+      const d=S.spDraft||{type:'dropoff'}; const c=cust(custId);
+      const id='ML-'+(UID++);
+      S.orders.unshift({id,spId:'sp1',custId,type:d.type,status:'confirmed',walkin:true,
+        address:d.type==='pickup'?(c.address||'—'):'Counter drop-off', slot:d.type==='pickup'?'Today, 6–8 PM':'At counter',
+        assignedCw:null,payMethod:null,paid:false,items:[],t:[['placed',Date.now()],['confirmed',Date.now()]]});
+      S.spDraft=null; go('sp-price',id); } break;
+    case 'savecust': {
+      const n=$('nc-name').value.trim(), p=$('nc-phone').value.trim();
+      if(!n||!p){toast('Add name and number','info');break;}
+      const id='cu'+(Date.now()); S.customers.push({id,name:n,phone:p,providers:['sp1'],address:$('nc-addr').value||'—'});
+      toast('Customer added · invite SMS sent'); go('sp-customers'); } break;
+    case 'savecw': {
+      const n=$('cw-name').value.trim(), p=$('cw-phone').value.trim();
+      if(!n||!p){toast('Add name and number','info');break;}
+      S.coworkers.push({id:'cw'+Date.now(),spId:'sp1',name:n,phone:p,job:'Laundry staff',photo:S.cwPhoto||null});
+      S.cwPhoto=null; toast('Staff member added'); go('sp-team'); } break;
+    case 'rmcw': { S.coworkers=S.coworkers.filter(c=>c.id!==x); toast('Coworker removed'); render(); } break;
+    case 'editprice': S.editSvc=x; render(); break;
+    case 'cancelprice': S.editSvc=null; render(); break;
+    case 'saveprice': {
+      const inp=$('ep-'+x); const v=parseFloat(inp&&inp.value);
+      if(isNaN(v)||v<0){toast('Enter a valid price','info');break;}
+      const row=sp('sp1').services.find(s=>s.id===x); if(row) row.price=v;
+      S.editSvc=null; toast('Price updated to '+money(v)); render(); } break;
+    case 'addsvc': {
+      const d=svc(x); sp('sp1').services.push({id:x,price:d.price,fee:d.comm});
+      S.editSvc=x; toast(d.name+' added — set your price'); render(); } break;
+    case 'editupi': S.editUpi=true; render(); break;
+    case 'cancelupi': S.editUpi=false; render(); break;
+    case 'saveupi': { const v=($('up-id')&&$('up-id').value||'').trim();
+      if(!v){toast('Enter a UPI ID','info');break;}
+      sp('sp1').upi=v; sp('sp1').qr=true; S.editUpi=false; toast('UPI ID & QR updated'); render(); } break;
+
+    /* coworker */
+    case 'cwpick': advance(x,'picked_up'); toast('Marked picked up'); go('cw-tasks'); break;
+    case 'cwdeliver': advance(x,'delivered'); toast('Marked delivered'); go('cw-tasks'); break;
+
+    /* customer */
+    case 'dtype': S.draftOrder.type=el.dataset.t; render(); break;
+    case 'pickshop': { S.draftOrder=S.draftOrder||{type:'pickup',slot:'Today, 5–7 PM'}; S.draftOrder.spId=x; S.draftOrder.items=null; render(); } break;
+    case 'cqty': { const l=S.draftOrder.items[+el.dataset.i]; l.qty=Math.max(0,l.qty+(+el.dataset.d)); render(); } break;
+    case 'placeorder': {
+      const me=cust(S.session.id); const d=S.draftOrder||{type:'pickup',slot:'Today, 5–7 PM'};
+      const spId=d.spId||me.providers[0];
+      if(!spId){ toast('Choose a laundry first','info'); break; }
+      const id='ML-'+(UID++);
+      const addr=$('d-addr')?$('d-addr').value:'Shop drop-off';
+      const slot=$('d-slot')?$('d-slot').value:'Drop-off at shop';
+      const items=(d.items||[]).filter(l=>l.qty>0).map(l=>({sid:l.sid,name:l.name,qty:l.qty,price:l.price,photos:0}));
+      const newlyLinked=!me.providers.includes(spId);
+      if(newlyLinked) me.providers.push(spId);
+      S.orders.unshift({id,spId,custId:me.id,type:d.type,status:'placed',address:addr,slot:slot,assignedCw:null,payMethod:null,paid:false,items,t:[['placed',Date.now()]]});
+      S.draftOrder=null;
+      toast(newlyLinked?('You\'re now linked to '+sp(spId).shop+'! 🎉'):(items.length?'Order sent with your list! 🎉':'Order sent to '+sp(spId).shop+'! 🎉'));
+      go('cust-order',id); } break;
+    case 'approve': advance(x,'approved'); toast('Price approved — work can start'); go('cust-order',x); break;
+    case 'custpay': { const o=ord(x); o.payMethod=el.dataset.m; o.paid=true; advance(x,'paid'); advance(x,'closed'); toast(el.dataset.m==='inapp'?'Paid! Thank you':'Marked cash'); go('cust-order',x); } break;
+    case 'custpayproof': { const o=ord(x); o.payMethod='upi'; o.paySubmitted=true; o.payProof=1; toast('Screenshot sent — shop will confirm','camera'); go('cust-order',x); } break;
+    case 'custcash': { const o=ord(x); o.payMethod='cash'; o.paySubmitted=true; toast('Pay the delivery person — they will confirm'); go('cust-order',x); } break;
+    case 'reqshop': { const me=cust(S.session.id); S.linkRequests.push({id:'lr'+Date.now(),custId:me.id,spId:x,status:'pending'});
+      toast(S.settings.approvalGate?'Request sent for approval':'Shop added');
+      if(!S.settings.approvalGate){me.providers.push(x); S.linkRequests.pop();}
+      go('cust-shops'); } break;
+
+    /* superadmin */
+    case 'flag': S.settings[el.dataset.k]=!S.settings[el.dataset.k]; toast('Feature '+(S.settings[el.dataset.k]?'turned on':'turned off')); render(); break;
+    case 'assignpm': { sp(x).pmId='pm1'; sp(x).status='pending'; toast('Assigned to Anita Rao'); render(); } break;
+    case 'payout': { toast('Payout released to '+sp(x).shop); el.outerHTML='<span class="pill green">'+I.check+'Released</span>'; } break;
+    case 'payoutall': toast('All payouts released 🎉'); break;
+
+    /* partner manager */
+    case 'activate': {
+      const p=sp(x); const picked=[...document.querySelectorAll('.ob-svc:checked')].map(i=>i.value);
+      if(!picked.length){toast('Pick at least one service','info');break;}
+      p.services=picked.map(sid=>{
+        const fi=document.querySelector('.ob-fee[data-sid="'+sid+'"]');
+        let fee=fi?parseFloat(fi.value):svc(sid).comm; if(isNaN(fee)||fee<0) fee=svc(sid).comm;
+        return {id:sid, price:svc(sid).price, fee};
+      });
+      p.status='active'; p.rating=5.0; p.hours=$('ob-hours').value||'9 AM – 8 PM';
+      p.gst=$('ob-gst').value||'—'; p.bank=$('ob-bank').value||'—'; p.since='2026';
+      const u=$('ob-upi')&&$('ob-upi').value.trim(); if(u){p.upi=u;p.qr=true;}
+      view.pm='pm-portfolio'; view._x=null; toast(p.shop+' is now live! 🎉'); render(); } break;
+    case 'apprreq': { const r=S.linkRequests.find(z=>z.id===x); r.status='approved'; cust(r.custId).providers.push(r.spId); toast('Approved — customer can now use both shops'); render(); } break;
+    case 'rejreq': { const r=S.linkRequests.find(z=>z.id===x); r.status='rejected'; S.linkRequests=S.linkRequests.filter(z=>z.id!==x); toast('Request declined'); render(); } break;
+  }
+});
+
+/* boot */
+render();
+</script>
+</body>
+</html>
