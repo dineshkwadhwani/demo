@@ -46,12 +46,22 @@ svg{width:18px;height:18px;flex-shrink:0;vertical-align:middle}
 #persona-bar .reset:hover{background:rgba(255,255,255,.12)}
 
 /* ===== Stage ===== */
-#stage{min-height:calc(100vh - 50px);display:flex;align-items:flex-start;justify-content:center;padding:26px 16px 60px}
+#stage{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:26px 16px 60px}
+.help-fab{position:fixed;top:14px;right:16px;z-index:120;width:40px;height:40px;border-radius:50%;background:#fff;
+  box-shadow:0 6px 18px rgba(15,42,43,.22);display:grid;place-items:center;color:var(--indigo);transition:.15s}
+.help-fab:hover{transform:scale(1.06)}
+.help-fab svg{width:22px;height:22px}
+#help-layer{position:fixed;inset:0;z-index:110;display:none}
+#help-layer.open{display:block}
+.help-scrim{position:absolute;inset:0;background:rgba(8,18,30,.74);backdrop-filter:blur(3px)}
+.help-modal{position:absolute;inset:0;overflow-y:auto;padding:64px 16px 40px;display:flex;justify-content:center}
+.help-close{position:fixed;top:14px;right:16px;z-index:130;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;display:grid;place-items:center}
+.help-close:hover{background:rgba(255,255,255,.28)}
 
 /* ===== Phone frame ===== */
 .phone{width:390px;max-width:100%;background:#0c1f20;border-radius:46px;padding:11px;box-shadow:0 30px 70px rgba(0,0,0,.5);position:relative}
 .phone .notch{position:absolute;top:18px;left:50%;transform:translateX(-50%);width:120px;height:26px;background:#0c1f20;border-radius:0 0 18px 18px;z-index:30}
-.screen{background:var(--mist);border-radius:36px;overflow:hidden;height:780px;max-height:calc(100vh - 110px);display:flex;flex-direction:column;position:relative}
+.screen{background:var(--mist);border-radius:36px;overflow:hidden;height:780px;max-height:calc(100vh - 60px);display:flex;flex-direction:column;position:relative}
 .statusbar{height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;font-size:12px;font-weight:700;color:var(--ink);flex-shrink:0;background:transparent}
 .statusbar .right{display:flex;gap:5px;align-items:center}
 .statusbar .right svg{width:15px;height:15px}
@@ -69,7 +79,7 @@ svg{width:18px;height:18px;flex-shrink:0;vertical-align:middle}
 .lt-nav.on{background:var(--indigo);color:#fff}
 .lt-side .who{margin-top:auto;padding:13px;border-radius:12px;background:rgba(255,255,255,.06);font-size:12.5px;color:#cfcbf5}
 .lt-side .who b{color:#fff;display:block;font-size:13px}
-.lt-main{flex:1;background:#F6F8FB;overflow-y:auto;max-height:calc(100vh - 110px)}
+.lt-main{flex:1;background:#F6F8FB;overflow-y:auto;max-height:calc(100vh - 60px)}
 .lt-top{display:flex;align-items:center;justify-content:space-between;padding:20px 30px;border-bottom:1px solid #ECEFF4;background:#fff;position:sticky;top:0;z-index:5}
 .lt-top h1{font-family:var(--disp);font-size:21px;margin:0;font-weight:800}
 .lt-top .sub{font-size:13px;color:var(--ink-soft);margin-top:2px}
@@ -198,7 +208,7 @@ tr:hover td{background:#FAFBFD}
 .land .foot{text-align:center;color:#6b748c;font-size:13px;margin-top:26px;line-height:1.7}
 
 /* auth / login */
-.auth-card{width:430px;max-width:100%;height:660px;max-height:calc(100vh - 110px);border-radius:32px;overflow:hidden;box-shadow:0 40px 90px rgba(0,0,0,.5)}
+.auth-card{width:430px;max-width:100%;height:660px;max-height:calc(100vh - 60px);border-radius:32px;overflow:hidden;box-shadow:0 40px 90px rgba(0,0,0,.5)}
 .auth{position:relative;height:100%;flex:1;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;color:#fff}
 .auth.teal{background:linear-gradient(155deg,#13b1b1 0%,#0B7A7E 52%,#085457 100%)}
 .auth.ind{background:linear-gradient(155deg,#7d76ff 0%,#4F46E5 52%,#332aae 100%)}
@@ -248,7 +258,7 @@ tr:hover td{background:#FAFBFD}
   #stage{padding:0}
   .phone{width:100%;border-radius:0;padding:0;box-shadow:none}
   .phone .notch{display:none}
-  .screen{border-radius:0;height:auto;min-height:calc(100vh - 50px);max-height:none}
+  .screen{border-radius:0;height:auto;min-height:100vh;max-height:none}
   .viewport{max-height:none}
   .laptop{flex-direction:column;border-radius:0}
   .lt-side{width:100%;flex-direction:row;overflow-x:auto;padding:12px}
@@ -263,7 +273,8 @@ tr:hover td{background:#FAFBFD}
 </head>
 <body>
 
-<div id="persona-bar"></div>
+<button class="help-fab" data-act="help" title="About this demo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M9.4 9.2a2.6 2.6 0 0 1 5 .9c0 1.8-2.6 2.3-2.6 4"/><line x1="12" y1="17.4" x2="12" y2="17.4"/></svg></button>
+<div id="help-layer"></div>
 <div id="stage"></div>
 <div class="toast" id="toast"></div>
 
@@ -399,6 +410,8 @@ const S = {
       t:[['placed',mins(1700)],['closed',mins(1500)]] },
   ],
   authed:{},
+  login:{ persona:'provider' },
+  helpOpen:false,
   session:{ role:null, id:null, persona:null, authed:false },
 };
 
@@ -483,102 +496,84 @@ let view = {};
 function go(v, extra){ view[S.session.role]=v; view._x = extra || null; render(); window.scrollTo&&window.scrollTo(0,0); const vp=document.querySelector('.viewport,.lt-main'); if(vp)vp.scrollTop=0; }
 function curView(def){ return view[S.session.role] || def; }
 
-function enter(key){
-  const p = PERSONAS[key];
-  S.session = {role:p.role, id:p.id||null, persona:key, authed:!!S.authed[key], loginStep:'phone'};
-  view = {}; render();
+function enter(key){            // used by help cards → go to login pre-selected
+  S.login.persona=key; S.session={role:null,id:null,persona:null,authed:false}; S.helpOpen=false; view={}; render();
 }
-function backToSwitcher(){ S.session={role:null,id:null,persona:null,authed:false}; render(); }
+function logout(){ S.session={role:null,id:null,persona:null,authed:false}; S.helpOpen=false; view={}; render(); }
 function otpAdvance(el,i){ el.value=el.value.replace(/\D/g,''); if(el.value&&i<3){const n=document.getElementById('otp'+(i+1)); if(n)n.focus();} }
+function selPersona(sel){ S.login.persona=sel.value; render(); }
 
 /* ============================================================
    RENDER ROOT
 ============================================================ */
 function render(){
-  renderPersonaBar();
   const stage=$('stage'); const r=S.session.role;
-  if(!r){ stage.innerHTML = switcher(); return; }
-  if(!S.session.authed){ stage.innerHTML = authFrame(); return; }
-  if(r==='superadmin'||r==='pm'){ stage.innerHTML = desktopFrame(r); }
+  if(!S.session.authed){ stage.innerHTML = loginScreen(); }
+  else if(r==='superadmin'||r==='pm'){ stage.innerHTML = desktopFrame(r); }
   else { stage.innerHTML = phoneFrame(r); }
+  renderHelp();
 }
 
-function authFrame(){
-  const key=S.session.persona; const p=PERSONAS[key];
-  const mobile = !(p.role==='superadmin'||p.role==='pm');
-  const inner = authScreen(key);
-  if(mobile) return `<div class="phone"><div class="notch"></div><div class="screen" style="background:#0b5c5f">${statusbar(true)}${inner}</div></div>`;
-  return `<div class="auth-card">${inner}</div>`;
-}
-function authScreen(key){
-  const p=PERSONAS[key];
+/* ============================================================
+   LOGIN  (the front door — number + OTP + persona)
+============================================================ */
+function loginScreen(){
+  const key=S.login.persona||'provider'; const p=PERSONAS[key];
   const teal = !(p.role==='superadmin'||p.role==='pm');
   const cls = teal?'teal':'ind'; const bcls=teal?'':'ind';
   const brand = teal?'MeriLaundry':'ChoreVerse';
-  const tag = teal?'Fresh clothes, zero hassle.<br>Sign in to get started.':'The platform behind every neighbourhood chore.';
-  const step = S.session.loginStep||'phone';
-  let sheet;
-  if(step==='phone'){
-    sheet = `<h3>Enter your mobile number</h3><div class="sub">We'll send a one-time code to verify it's you.</div>
-      <div class="phone-in"><span class="cc">🇮🇳 +91</span><input id="lg-phone" inputmode="numeric" maxlength="11" value="${p.phone}" placeholder="00000 00000"></div>
-      <button class="btn ${bcls} lg mt16" data-act="sendotp">Get OTP ${I.chev}</button>
-      <div class="muted tac" style="font-size:11.5px;margin-top:14px">Your number decides what you see — owner, staff or customer.</div>`;
-  } else {
-    sheet = `<button class="lk" data-act="loginback" style="margin-bottom:8px">${I.back} Change number</button>
-      <h3>Verify your number</h3><div class="sub">Enter the code sent to +91 ${S.session.loginPhone||p.phone}</div>
-      <div class="otp-row">${[0,1,2,3].map(i=>`<input id="otp${i}" inputmode="numeric" maxlength="1" oninput="otpAdvance(this,${i})">`).join('')}</div>
-      <div class="hintpill">${I.info} Demo code is 0000</div>
-      <button class="btn ${bcls} lg mt16" data-act="verifyotp">Verify & continue ${I.check}</button>
-      <div class="tac mt16" style="font-size:13px;color:var(--ink-soft)">Didn't get it? <button class="lk" data-act="sendotp">Resend</button> · <button class="lk" data-act="otpfill">Autofill 0000</button></div>`;
-  }
-  return `<div class="auth ${cls}">
+  const tag = teal?'Fresh clothes, zero hassle.<br>Your laundry, in your pocket.':'The platform behind every neighbourhood chore.';
+  const opts=['provider','coworker','customer','customer2','pm','superadmin']
+    .map(k=>`<option value="${k}" ${k===key?'selected':''}>${PERSONAS[k].sub} — ${PERSONAS[k].name}</option>`).join('');
+  const sheet = `<h3>Sign in to continue</h3><div class="sub">Enter your mobile number and the one-time code.</div>
+    <div class="phone-in"><span class="cc">🇮🇳 +91</span><input id="lg-phone" inputmode="numeric" maxlength="11" value="${p.phone}" placeholder="00000 00000"></div>
+    <div style="margin-top:15px"><div style="font-size:12.5px;font-weight:700;color:var(--ink-soft);margin-bottom:8px">One-time code</div>
+      <div class="otp-row">${[0,1,2,3].map(i=>`<input id="otp${i}" inputmode="numeric" maxlength="1" oninput="otpAdvance(this,${i})">`).join('')}</div></div>
+    <div class="hintpill">${I.info} Demo code is 0000 <button class="lk" data-act="otpfill" style="margin-left:4px;font-size:12.5px">Autofill</button></div>
+    <div class="field"><label>Sign in as</label>
+      <select id="lg-persona" onchange="selPersona(this)">${opts}</select></div>
+    <button class="btn ${bcls} lg mt16" data-act="login">Login ${I.chev}</button>`;
+  const body = `<div class="auth ${cls}">
     <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div>
     <div class="top">
       <div class="badge">${teal?I.drop:I.grid}</div>
       <div class="brand">${brand}</div>
       <div class="tag">${tag}</div>
-      <div class="asas">${I[p.icon]} Signing in as ${p.sub}</div>
+      <div class="asas">${I[p.icon]} ${p.sub} · ${p.name}</div>
     </div>
     <div class="sheet">${sheet}</div>
   </div>`;
-}
-
-function renderPersonaBar(){
-  const order=['superadmin','pm','provider','coworker','customer','customer2'];
-  const chips = order.map(k=>{
-    const p=PERSONAS[k]; const on = S.session.persona===k;
-    return `<button class="pchip ${on?'on':''}" data-act="enter" data-role="${k}">${I[p.icon]}${p.sub}</button>`;
-  }).join('');
-  $('persona-bar').innerHTML = `
-    <div class="cv-logo"><span class="dot">${I.grid}</span>ChoreVerse <span class="lbl">demo</span></div>
-    <div class="pchips">${chips}</div>
-    ${S.session.role?`<button class="reset" data-act="switcher">↺ All perspectives</button>`:''}`;
+  return `<div class="phone"><div class="notch"></div><div class="screen" style="background:#0b5c5f">${statusbar(true)}${body}</div></div>`;
 }
 
 /* ============================================================
-   SWITCHER (landing)
+   HELP overlay (the old landing, now behind the ? icon)
 ============================================================ */
-function switcher(){
-  const cards = ['provider','customer','customer2','coworker','pm','superadmin'].map(k=>{
-    const p=PERSONAS[k];
-    const dev = (k==='superadmin'||k==='pm')?'Laptop':'Mobile';
-    const hero = k==='provider'?'<div class="dev" style="background:#2b3a1a;color:#a3d977">★ Start here</div>':`<div class="dev">${dev}</div>`;
+function renderHelp(){
+  const L=$('help-layer'); if(!L) return;
+  if(S.helpOpen){ L.className='open'; L.innerHTML=helpOverlay(); }
+  else { L.className=''; L.innerHTML=''; }
+}
+function helpOverlay(){
+  const cards=['provider','coworker','customer','customer2','pm','superadmin'].map(k=>{
+    const p=PERSONAS[k]; const dev=(k==='superadmin'||k==='pm')?'Laptop · ChoreVerse':'Mobile · MeriLaundry';
     return `<button class="role-card" data-act="enter" data-role="${k}">
-      ${hero}
+      <div class="dev">${dev}</div>
       <div class="ic" style="background:${p.color}">${I[p.icon]}</div>
       <h3>${p.sub}</h3><div class="ph">${p.name} · ${p.phone}</div>
       <div class="ds">${p.desc}</div></button>`;
   }).join('');
-  return `<div class="land">
-    <div class="hero">
-      <div class="eyebrow">ChoreVerse platform · first chore</div>
-      <h1>One platform.<br><span class="tl-grad">Every neighbourhood chore.</span></h1>
-      <p>This is a live, clickable prototype. Pick any role below to step into their screen. Actions are shared across roles — place an order as a customer, then jump to the laundry owner's phone and watch it arrive.</p>
-    </div>
-    <div class="role-grid">${cards}</div>
-    <div class="foot">Login is by mobile number — the number decides the role.<br>
-    Today's chore: <b style="color:#42d4cf">MeriLaundry</b> · Coming next: RaddiWala, MochiPro</div>
-  </div>`;
+  return `<div class="help-scrim" data-act="helpclose"></div>
+    <button class="help-close" data-act="helpclose">✕</button>
+    <div class="help-modal"><div class="land">
+      <div class="hero">
+        <div class="eyebrow">ChoreVerse demo · the perspectives</div>
+        <h1>One platform.<br><span class="tl-grad">Every neighbourhood chore.</span></h1>
+        <p>Every role signs in with their mobile number — the demo code is <b style="color:#fff">0000</b>. Tap a role below to jump to its login, or just use the “Sign in as” dropdown on the login screen. Actions are shared across roles: place an order as a customer, then sign in as the owner and watch it arrive.</p>
+      </div>
+      <div class="role-grid">${cards}</div>
+      <div class="foot">Today's chore: <b style="color:#42d4cf">MeriLaundry</b> · Coming next: RaddiWala, MochiPro</div>
+    </div></div>`;
 }
 
 /* ============================================================
@@ -618,7 +613,7 @@ function desktopFrame(role){
     </div>
     <div class="lt-main">
       <div class="lt-top"><div><h1>${title}</h1><div class="sub">${sub}</div></div>
-        <button class="btn ind sm" data-act="switcher">↺ Switch role</button></div>
+        <button class="btn ind sm" data-act="logout">${I.logout} Log out</button></div>
       <div class="lt-body">${body}</div>
     </div></div>`;
 }
@@ -1521,17 +1516,18 @@ document.addEventListener('click',e=>{
   const a=el.dataset.act, x=el.dataset.x;
   switch(a){
     case 'enter': enter(el.dataset.role); break;
-    case 'switcher': backToSwitcher(); break;
-    case 'logout': { if(S.session.persona) delete S.authed[S.session.persona]; backToSwitcher(); } break;
-    case 'sendotp': { const ph=($('lg-phone')&&$('lg-phone').value.trim())||PERSONAS[S.session.persona].phone; S.session.loginPhone=ph; S.session.loginStep='otp'; toast('OTP sent — demo code 0000','phone'); render(); } break;
-    case 'loginback': S.session.loginStep='phone'; render(); break;
+    case 'help': S.helpOpen=!S.helpOpen; renderHelp(); break;
+    case 'helpclose': S.helpOpen=false; renderHelp(); break;
+    case 'switcher': logout(); break;
+    case 'logout': logout(); break;
     case 'otpfill': ['otp0','otp1','otp2','otp3'].forEach(id=>{const e=$(id); if(e)e.value='0';}); break;
-    case 'verifyotp': {
+    case 'login': {
       const code=['otp0','otp1','otp2','otp3'].map(id=>($(id)&&$(id).value||'')).join('');
-      if(code.length<4){ toast('Enter the 4-digit code','info'); break; }
       if(code!=='0000'){ toast('Demo code is 0000','info'); break; }
-      S.authed[S.session.persona]=true; S.session.authed=true; S.session.loginStep=null;
-      view={}; toast('Welcome, '+PERSONAS[S.session.persona].name.split(/[ —]/)[0]+'!'); render(); } break;
+      const key=($('lg-persona')&&$('lg-persona').value)||S.login.persona||'provider';
+      const p=PERSONAS[key];
+      S.session={role:p.role,id:p.id||null,persona:key,authed:true};
+      S.helpOpen=false; view={}; toast('Welcome, '+p.name.split(/[ —]/)[0]+'!'); render(); } break;
     case 'go': go(el.dataset.v, el.dataset.x); break;
     case 'toast': toast(el.dataset.m||'Demo action'); break;
 
