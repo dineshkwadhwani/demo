@@ -217,7 +217,7 @@ tr:hover td{background:#FAFBFD}
 .auth .b2{width:170px;height:170px;background:rgba(255,255,255,.08);top:130px;left:-80px}
 .auth .b3{width:84px;height:84px;border:2px solid rgba(255,255,255,.22);top:70px;left:54px}
 .auth .b4{width:14px;height:14px;background:rgba(255,255,255,.5);top:150px;right:70px}
-.auth .top{position:relative;z-index:1;padding:52px 30px 26px;flex:1}
+.auth .top{position:relative;z-index:1;padding:18px 30px 26px;flex:1}
 .auth .badge{width:62px;height:62px;border-radius:19px;background:rgba(255,255,255,.18);display:grid;place-items:center;box-shadow:0 12px 30px rgba(0,0,0,.2)}
 .auth .badge svg{width:32px;height:32px}
 .auth .brand{font-family:var(--disp);font-weight:800;font-size:30px;margin-top:20px;letter-spacing:-.5px}
@@ -447,7 +447,7 @@ function pickPhoto(input){
   const f=input.files&&input.files[0]; if(!f) return;
   const tgt=input.dataset.tgt, id=input.dataset.id;
   const r=new FileReader();
-  r.onload=()=>{ if(tgt==='cw') S.cwPhoto=r.result; else if(tgt==='owner'){const p=sp(id); if(p)p.ownerPhoto=r.result;} render(); };
+  r.onload=()=>{ if(tgt==='cw') S.cwPhoto=r.result; else if(tgt==='newcust') S.custPhoto=r.result; else if(tgt==='owner'){const p=sp(id); if(p)p.ownerPhoto=r.result;} render(); };
   r.readAsDataURL(f);
 }
 
@@ -535,6 +535,7 @@ function loginScreen(){
     <button class="btn ${bcls} lg mt16" data-act="login">Login ${I.chev}</button>`;
   const body = `<div class="auth ${cls}">
     <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div>
+    ${statusbar(true)}
     <div class="top">
       <div class="badge">${teal?I.drop:I.grid}</div>
       <div class="brand">${brand}</div>
@@ -543,7 +544,7 @@ function loginScreen(){
     </div>
     <div class="sheet">${sheet}</div>
   </div>`;
-  return `<div class="phone"><div class="notch"></div><div class="screen" style="background:#0b5c5f">${statusbar(true)}${body}</div></div>`;
+  return `<div class="phone"><div class="notch"></div><div class="screen" style="background:transparent">${body}</div></div>`;
 }
 
 /* ============================================================
@@ -631,7 +632,8 @@ function providerApp(){
   else if(v==='sp-items') {body=editItems(view._x); nav=false;}
   else if(v==='sp-menu') body=spMenu();
   else if(v==='sp-customers') body=spCustomers();
-  else if(v.startsWith('sp-addcust')) {body=spAddCust(); nav=false;}
+  else if(v==='sp-addcust') {body=spAddCust(); nav=false;}
+  else if(v==='sp-custadded') {body=spCustAdded(view._x); nav=false;}
   else if(v==='sp-team') body=spTeam();
   else if(v.startsWith('sp-addcw')) {body=spAddCw(); nav=false;}
   else if(v==='sp-money') body=spMoney();
@@ -942,25 +944,82 @@ function spMenu(){
 }
 
 function spCustomers(){
-  const list = S.customers.filter(c=>c.providers.includes('sp1'));
-  const rows=list.map(c=>{const cnt=S.orders.filter(o=>o.custId===c.id&&o.spId==='sp1').length;
-    return `<div class="card"><div class="row between center">
-      <div class="row center" style="gap:12px"><div class="avatar" style="background:${PERSONAS.customer.color}">${initials(c.name)}</div>
-      <div><div class="b">${c.name}</div><div class="muted" style="font-size:12.5px">${c.phone} · ${cnt} orders</div></div></div>
-      <span class="pill green">${I.link}Linked</span></div></div>`;}).join('');
-  return `<div class="appbar"><div class="ml-logo" style="font-size:17px">My customers</div><div class="hi">${list.length} customers linked to you</div></div>
-    <div class="card flush" style="background:var(--teal-tint);margin:14px 18px;padding:14px;color:var(--teal-deep);font-size:13px">${I.shield} Linked customers stay with you. They can only move to another shop after platform approval.</div>
-    ${rows}
+  const me=sp('sp1');
+  const list=S.customers.filter(c=>c.providers.includes(me.id));
+  const recent=S.recentCust||null;
+  const rows=list.map(c=>{
+    const cnt=S.orders.filter(o=>o.custId===c.id&&o.spId===me.id).length;
+    const isNew=c.id===recent;
+    return `<div class="card" style="${isNew?'border:1.5px solid var(--green);':''}" >
+      <div class="row between center">
+        <div class="row center" style="gap:12px">
+          ${av(c.name,PERSONAS.customer.color,c.photo)}
+          <div><div class="b">${c.name}</div>
+            <div class="muted" style="font-size:12.5px">${c.phone}${c.address&&c.address!=='—'?' · '+c.address:''}</div>
+            <div class="muted" style="font-size:12px;margin-top:2px">${cnt} orders</div></div></div>
+        <div class="row" style="gap:8px;flex-direction:column;align-items:flex-end">
+          <span class="pill green">${I.link}Linked</span>
+          ${isNew?`<span class="pill teal" style="font-size:11px">${I.sparkle}Just added</span>`:''}
+        </div>
+      </div>
+    </div>`;}).join('');
+  return `<div class="appbar"><div class="ml-logo" style="font-size:17px">My customers</div>
+    <div class="hi">${list.length} customer${list.length===1?'':'s'} linked to ${me.shop}</div></div>
+    <div class="card flush" style="background:var(--teal-tint);margin:14px 18px;padding:14px;color:var(--teal-deep);font-size:13px">${I.shield} Customers you add are automatically linked to your shop. They can only switch or add another shop with platform approval.</div>
+    ${rows||`<div class="empty"><div class="ic">${I.users}</div><div class="b">No customers yet</div><div class="muted">Add your first customer and they'll get an SMS invite.</div></div>`}
     <div style="margin:6px 18px 24px"><button class="btn" data-act="go" data-v="sp-addcust">${I.plus} Add a customer</button></div>`;
 }
 function spAddCust(){
+  const me=sp('sp1');
   return `${spHeader('Add customer','sp-customers')}
     <div class="card" style="margin-top:-22px;position:relative;z-index:2">
+      <div class="tac" style="margin-bottom:4px">
+        <label class="photo-tile" style="width:72px;height:72px;margin:0 auto;cursor:pointer;${S.custPhoto?`background-image:url('${S.custPhoto}');background-size:cover;border-style:solid`:''}">
+          <input type="file" accept="image/*" data-tgt="newcust" onchange="pickPhoto(this)" style="display:none">
+          ${S.custPhoto?'':I.camera}
+        </label>
+        <div class="muted" style="font-size:12px;margin-top:8px">${S.custPhoto?'Tap to change':'Optional — add a face photo'}</div>
+      </div>
       <div class="field"><label>Customer name</label><input id="nc-name" placeholder="e.g. Sunita Patil"></div>
       <div class="field"><label>Mobile number</label><input id="nc-phone" placeholder="90000 00xxx" inputmode="numeric"></div>
-      <div class="field"><label>Address (optional)</label><input id="nc-addr" placeholder="Flat / society / area"></div>
-      <div class="card flush mt16" style="background:var(--marigold-tint);padding:13px;font-size:13px;color:var(--marigold-deep)">${I.phone} We'll text them the MeriLaundry app link. They log in with an OTP and see you straight away.</div>
-      <button class="btn mt16" data-act="savecust">${I.check} Add & send invite</button>
+      <div class="field"><label>Address</label><input id="nc-addr" placeholder="Flat / society / area, Pune"></div>
+    </div>
+    <div class="card" style="background:var(--indigo-tint);padding:14px">
+      <div class="kicker" style="color:var(--indigo)">What they receive</div>
+      <div class="card flush mt12" style="background:#fff;border:1.5px solid var(--line);padding:13px;font-size:13px;line-height:1.6">
+        📱 <b>SMS from MeriLaundry</b><br>
+        "Hi! ${me.shop} has added you to MeriLaundry. Download the app and track your laundry live. Your first login: merilaundry.app/join · OTP will be sent on this number."
+      </div>
+      <div class="muted mt8" style="font-size:12px">Once they log in, ${me.shop} appears as their default laundry.</div>
+    </div>
+    <div style="margin:0 18px 24px"><button class="btn lg" data-act="savecust">${I.check} Add customer & send invite</button></div>`;
+}
+function spCustAdded(custId){
+  const me=sp('sp1'); const c=S.customers.find(x=>x.id===custId);
+  if(!c) return spCustomers();
+  return `${spHeader('Customer added','sp-customers')}
+    <div class="card" style="margin-top:-22px;position:relative;z-index:2;text-align:center">
+      <div style="width:72px;height:72px;margin:0 auto 12px">${av(c.name,PERSONAS.customer.color,c.photo,72)}</div>
+      <div class="b" style="font-size:19px">${c.name}</div>
+      <div class="muted">${c.phone}</div>
+      ${c.address&&c.address!=='—'?`<div class="muted" style="font-size:13px;margin-top:4px">${c.address}</div>`:''}
+      <div class="pill green mt12" style="margin:12px auto 0;width:fit-content">${I.link} Linked to ${me.shop}</div>
+    </div>
+    <div class="card" style="background:var(--green-tint);color:var(--green)">
+      <div class="row center" style="gap:10px">${I.phone}<div><div class="b">SMS invite sent</div>
+      <div style="font-size:13px;margin-top:2px">They'll get a link to join MeriLaundry. When they log in, ${me.shop} is their laundry — they don't need to search or select.</div></div></div>
+    </div>
+    <div class="card" style="background:var(--teal-tint);color:var(--teal-deep)">
+      <div class="b" style="font-size:13.5px">What happens next</div>
+      <div style="font-size:13px;margin-top:8px;line-height:1.7">
+        1. ${c.name} downloads the app and logs in with OTP.<br>
+        2. They see ${me.shop} as their laundry — ready to place an order.<br>
+        3. You'll see their orders arrive here.
+      </div>
+    </div>
+    <div style="margin:0 18px 24px;display:flex;gap:12px">
+      <button class="btn ghost" data-act="go" data-v="sp-addcust" style="flex:1">${I.plus} Add another</button>
+      <button class="btn" data-act="go" data-v="sp-customers" style="flex:1">${I.users} View all</button>
     </div>`;
 }
 
@@ -1561,10 +1620,14 @@ document.addEventListener('click',e=>{
         assignedCw:null,payMethod:null,paid:false,items:[],t:[['placed',Date.now()],['confirmed',Date.now()]]});
       S.spDraft=null; go('sp-price',id); } break;
     case 'savecust': {
-      const n=$('nc-name').value.trim(), p=$('nc-phone').value.trim();
-      if(!n||!p){toast('Add name and number','info');break;}
-      const id='cu'+(Date.now()); S.customers.push({id,name:n,phone:p,providers:['sp1'],address:$('nc-addr').value||'—'});
-      toast('Customer added · invite SMS sent'); go('sp-customers'); } break;
+      const n=$('nc-name').value.trim(), ph=$('nc-phone').value.trim();
+      if(!n||!ph){toast('Add name and number','info');break;}
+      const spId=S.session.id||'sp1';
+      const id='cu'+Date.now();
+      S.customers.push({id,name:n,phone:ph,providers:[spId],address:$('nc-addr')&&$('nc-addr').value.trim()||'—',photo:S.custPhoto||null});
+      S.recentCust=id; S.custPhoto=null;
+      toast(n+' added and linked to you!');
+      go('sp-custadded',id); } break;
     case 'savecw': {
       const n=$('cw-name').value.trim(), p=$('cw-phone').value.trim();
       if(!n||!p){toast('Add name and number','info');break;}
